@@ -1,0 +1,16 @@
+image: registry.gitlab.com/goodok-chat/server/front-server:latest
+stages:
+  - build
+variables:
+  CONAN_SYSREQUIRES_MODE: enabled
+Build:
+  stage: build
+  before_script:
+    - mkdir build && cd build
+    - conan profile new goodok-profile --detect
+    - conan profile update settings.compiler.version=9.3 goodok-profile
+    - conan profile update settings.compiler.libcxx=libstdc++11 goodok-profile
+  script:
+    - conan install .. --build missing --profile goodok-profile
+    - cmake ..
+    - cmake --build .
