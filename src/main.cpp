@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <protocol/protocol.h>
+#include "tools/Logger.h"
 
 #include <boost/program_options.hpp>
 
@@ -51,5 +52,6 @@ Params setParameters(int argc, char** argv) {
 int main(int argc, char *argv[])
 {
     auto params = setParameters(argc, argv);
-    std::cout << "Hello World!" << std::endl;
+    goodok::log::Logger log(boost::log::trivial::severity_level::error);
+    goodok::log::write(boost::log::trivial::severity_level::info, "Test logger");
 }

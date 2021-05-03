@@ -10,7 +10,14 @@ include(${CONAN_LIB_DIRS_PROTOBUF}/cmake/protobuf/protobuf-module.cmake)
 include(${CONAN_LIB_DIRS_PROTOBUF}/cmake/protobuf/protobuf-generate.cmake)
 find_library(PROTOCOL NAMES protocol_lib HINTS "/usr/local/lib/goodok")
 
-file(GLOB FILES_SRC "src/*.cpp")
+include_directories(SYSTEM
+        ${CONAN_INCLUDE_DIRS_BOOST}
+)
+
+file(GLOB FILES_SRC
+        "src/*.cpp"
+        "src/tools/*.cpp"
+)
 add_executable(${APP_NAME} ${FILES_SRC})
 unset(FILES_SRC)
 
