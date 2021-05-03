@@ -8,7 +8,14 @@
 namespace goodok {
 namespace log {
 
-    Logger::Logger(severity_level lvl)
+    namespace logging = boost::log;
+    namespace sinks = boost::log::sinks;
+    namespace src = boost::log::sources;
+    namespace expr = boost::log::expressions;
+    namespace attrs = boost::log::attributes;
+    namespace keywords = boost::log::keywords;
+
+    void configure(boost::log::trivial::severity_level lvl)
     {
         logging::add_file_log
         (
@@ -22,6 +29,34 @@ namespace log {
                 );
         boost::log::core::get()->set_filter(boost::log::trivial::severity >= lvl);
         logging::add_common_attributes();
+    }
+
+    void write(boost::log::trivial::severity_level lvl, std::string const& text)
+    {
+        using level = boost::log::trivial::severity_level;
+
+        switch (lvl) {
+            case level::trace:
+                BOOST_LOG_TRIVIAL(trace) << text;
+                break;
+            case level::debug:
+                BOOST_LOG_TRIVIAL(debug) << text;
+                break;
+            case level::info:
+                BOOST_LOG_TRIVIAL(info) << text;
+                break;
+            case level::warning:
+                BOOST_LOG_TRIVIAL(warning) << text;
+                break;
+            case level::error:
+                BOOST_LOG_TRIVIAL(error) << text;
+                break;
+            case level::fatal :
+                BOOST_LOG_TRIVIAL(fatal) << text;
+                break;
+            default:
+                break;
+        }
     }
 
 } // end namespace log

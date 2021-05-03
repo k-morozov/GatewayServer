@@ -11,6 +11,7 @@
 constexpr const char* userOpt = "name";
 constexpr const char* passOpt = "pass";
 constexpr const char* helpOpt = "help";
+constexpr const char* logLvl = "";
 
 struct Params
 {
@@ -52,6 +53,6 @@ Params setParameters(int argc, char** argv) {
 int main(int argc, char *argv[])
 {
     auto params = setParameters(argc, argv);
-    goodok::log::Logger log(boost::log::trivial::severity_level::error);
+    goodok::log::configure(boost::log::trivial::severity_level::error);
     goodok::log::write(boost::log::trivial::severity_level::info, "Test logger");
 }
