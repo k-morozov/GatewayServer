@@ -4,6 +4,7 @@ project(goodok-front-server)
 
 set(APP_NAME front-server)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+
 conan_basic_setup()
 
 include(${CONAN_LIB_DIRS_PROTOBUF}/cmake/protobuf/protobuf-module.cmake)
@@ -20,6 +21,8 @@ file(GLOB FILES_SRC
 )
 add_executable(${APP_NAME} ${FILES_SRC})
 unset(FILES_SRC)
+
+#add_custom_command(TARGET ${APP_NAME} PRE_BUILD COMMAND mkdir -p ${CMAKE_BINARY_DIR}/proto)
 
 set_target_properties(${APP_NAME} PROPERTIES
         CXX_STANDARD 17

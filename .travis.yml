@@ -1,0 +1,46 @@
+language: cpp
+
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-9
+            - graphviz
+            - doxygen
+            - python-pip
+      env:
+        - MATRIX_EVAL="CXX=g++-9"
+        - BUILD_DIR=build
+        - APP_NAME=protocol
+      before_install:
+        - eval "${MATRIX_EVAL}"
+      before_script:
+        - pip install conan
+        - source ~/.profile
+      cache:
+        directories:
+          - /home/travis/.conan/
+      script:
+        - mkdir -p ${BUILD_DIR}  && cd ${BUILD_DIR} && mkdir -p proto
+        - conan profile new goodok-profile --detect
+        - conan profile update settings.compiler.version=9.3 goodok-profile
+        - conan profile update settings.compiler.libcxx=libstdc++11 goodok-profile
+        - conan install -s build_type=Release .. --build=missing --profile goodok-profile
+        - cmake ..
+        - cmake --build .
+
+#      before_deploy:
+#        - git config --local user.name "k-morozov"
+#        - git config --local user.email "morozov-kst@yandex.ru"
+#        - git tag 0.1.$TRAVIS_BUILD_NUMBER-Linux
+#      deploy:
+#        - provider: releases
+#          api_key: $GITHUB_API_KEY
+#          file: Messaging-framework-0.1.3-Linux.deb
+#          skip_cleanup: true
+#          on:
+#            branch: master
