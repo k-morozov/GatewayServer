@@ -41,11 +41,11 @@ jobs:
       - name: Build
         run:  |
           cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-          cmake --build ${{github.workspace}}/build --target test
-      - name: Test
-        run: |
-          ctest -C ${{env.BUILD_TYPE}}
-          # cmake --build ${{github.workspace}}/build --target test
 
-      - name: Package
-        run: cmake --build ${{github.workspace}}/build --target package
+#      - name: Test
+#        run: |
+#          ctest -C ${{env.BUILD_TYPE}}
+#          # cmake --build ${{github.workspace}}/build --target test
+#
+#      - name: Package
+#        run: cmake --build ${{github.workspace}}/build --target package
