@@ -26,7 +26,7 @@ matrix:
           - /home/travis/.conan
       script:
         - python --version
-        - sudo apt install python3.8
+        - sudo apt-get install python3
         - python --version
         - mkdir -p ${BUILD_DIR}  && cd ${BUILD_DIR} && mkdir -p proto
         - conan profile new goodok-profile --detect --force
