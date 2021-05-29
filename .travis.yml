@@ -3,11 +3,11 @@ language: cpp
 matrix:
   include:
     - os: linux
-      dist: bionic
+      dist: focal
       addons:
         apt:
-          sources:
-            - ubuntu-toolchain-r-test
+#          sources:
+#            - ubuntu-toolchain-r-test
           packages:
             - g++-9
             - graphviz
@@ -17,7 +17,7 @@ matrix:
       env:
         - MATRIX_EVAL="CXX=g++-9"
         - BUILD_DIR=build
-        - APP_NAME=protocol
+        - APP_NAME=gateway
       before_install:
         - eval "${MATRIX_EVAL}"
       before_script:
