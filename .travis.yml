@@ -11,7 +11,7 @@ matrix:
             - g++-9
             - graphviz
             - doxygen
-            - python3-pip
+            - python-pip
       env:
         - MATRIX_EVAL="CXX=g++-9"
         - BUILD_DIR=build
@@ -19,6 +19,7 @@ matrix:
       before_install:
         - eval "${MATRIX_EVAL}"
       before_script:
+        - pip install --upgrade pip
         - pip3 install conan
         - source ~/.profile
       cache:
