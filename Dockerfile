@@ -13,5 +13,4 @@ RUN apt-get update && \
         pip3 install conan
 
 COPY Messaging-framework-0.1.3-Linux.deb .
-
 RUN apt-get install ./Messaging-framework-0.1.3-Linux.deb

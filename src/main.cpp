@@ -53,6 +53,6 @@ Params setParameters(int argc, char** argv) {
 int main(int argc, char *argv[])
 {
     auto params = setParameters(argc, argv);
-    goodok::log::configure(boost::log::trivial::severity_level::error);
+    goodok::log::configure(boost::log::trivial::severity_level::info);
     goodok::log::write(boost::log::trivial::severity_level::info, "Test logger");
 }
