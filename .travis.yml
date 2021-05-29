@@ -11,7 +11,7 @@ matrix:
             - g++-9
             - graphviz
             - doxygen
-            - python-pip
+            - python3-pip
       env:
         - MATRIX_EVAL="CXX=g++-9"
         - BUILD_DIR=build
