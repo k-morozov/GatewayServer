@@ -28,7 +28,9 @@ matrix:
       script:
         - python --version
         - sudo apt-get install python3
-        - python --version
+        - python3 --version
+        - which python
+        - which python3
         - mkdir -p ${BUILD_DIR}  && cd ${BUILD_DIR} && mkdir -p proto
         - conan profile new goodok-profile --detect --force
         - conan profile update settings.compiler.version=9.3 goodok-profile
