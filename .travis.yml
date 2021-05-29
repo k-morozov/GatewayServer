@@ -26,6 +26,8 @@ matrix:
         directories:
           - /home/travis/.conan
       script:
+        - pip --version
+        - pip3 --version
         - python --version
         - sudo apt-get install python3
         - python3 --version
