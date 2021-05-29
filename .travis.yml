@@ -28,8 +28,8 @@ matrix:
         directories:
           - /home/travis/.conan
       script:
-        - pip --version
-        - pip3 --version
+#        - pip --version
+#        - pip3 --version
         - python --version
 #        - sudo apt-get install python3
         - python3 --version
@@ -39,7 +39,7 @@ matrix:
         - conan profile new goodok-profile --detect --force
         - conan profile update settings.compiler.version=9.3 goodok-profile
         - conan profile update settings.compiler.libcxx=libstdc++11 goodok-profile
-        - conan install -s build_type=Release .. --profile goodok-profile
+        - conan install -s build_type=Release .. --build missing --profile goodok-profile
         - cmake ..
         - cmake --build .
 
