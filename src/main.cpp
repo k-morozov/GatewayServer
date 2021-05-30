@@ -12,12 +12,9 @@
 
 
 #include <iostream>
-#include <thread>
 
 constexpr const char* userOpt = "name";
 constexpr const char* passOpt = "pass";
-constexpr const char* helpOpt = "help";
-constexpr const char* logLvl = "";
 
 struct Params
 {
