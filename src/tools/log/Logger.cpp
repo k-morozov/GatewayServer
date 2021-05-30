@@ -31,28 +31,34 @@ namespace log {
         logging::add_common_attributes();
     }
 
-    void write(boost::log::trivial::severity_level lvl, std::string const& text)
+    void write(boost::log::trivial::severity_level lvl, std::string const& location, boost::format const& text)
+    {
+        write(lvl, location, text.str());
+    }
+
+    void write(boost::log::trivial::severity_level lvl, std::string const& location, std::string const& text)
     {
         using level = boost::log::trivial::severity_level;
 
+        auto logMsg = "[" + location + "] " + text;
         switch (lvl) {
             case level::trace:
-                BOOST_LOG_TRIVIAL(trace) << text;
+                BOOST_LOG_TRIVIAL(trace) << logMsg;
                 break;
             case level::debug:
-                BOOST_LOG_TRIVIAL(debug) << text;
+                BOOST_LOG_TRIVIAL(debug) << logMsg;
                 break;
             case level::info:
-                BOOST_LOG_TRIVIAL(info) << text;
+                BOOST_LOG_TRIVIAL(info) << logMsg;
                 break;
             case level::warning:
-                BOOST_LOG_TRIVIAL(warning) << text;
+                BOOST_LOG_TRIVIAL(warning) << logMsg;
                 break;
             case level::error:
-                BOOST_LOG_TRIVIAL(error) << text;
+                BOOST_LOG_TRIVIAL(error) << logMsg;
                 break;
             case level::fatal :
-                BOOST_LOG_TRIVIAL(fatal) << text;
+                BOOST_LOG_TRIVIAL(fatal) << logMsg;
                 break;
             default:
                 break;

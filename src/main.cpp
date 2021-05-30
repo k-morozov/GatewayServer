@@ -2,11 +2,16 @@
 // Created by focus on 02.05.2021.
 //
 
-#include <iostream>
+
 #include <protocol/protocol.h>
-#include "tools/Logger.h"
+
+#include "tools/log/Logger.h"
 
 #include <boost/program_options.hpp>
+
+
+#include <iostream>
+
 
 constexpr const char* userOpt = "name";
 constexpr const char* passOpt = "pass";
@@ -53,6 +58,6 @@ Params setParameters(int argc, char** argv) {
 int main(int argc, char *argv[])
 {
     auto params = setParameters(argc, argv);
-    goodok::log::configure(boost::log::trivial::severity_level::info);
-    goodok::log::write(boost::log::trivial::severity_level::info, "Test logger");
+    goodok::log::configure(goodok::log::Level::info);
+    goodok::log::write(goodok::log::Level::info, "Main", boost::format("test message from %1%") % "focus");
 }

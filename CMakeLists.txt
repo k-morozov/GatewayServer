@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.16)
 
 project(goodok-front-server)
 
@@ -17,7 +17,7 @@ include_directories(SYSTEM
 
 file(GLOB FILES_SRC
         "src/*.cpp"
-        "src/tools/*.cpp"
+        "src/tools/log/*.cpp"
 )
 add_executable(${APP_NAME} ${FILES_SRC})
 unset(FILES_SRC)
