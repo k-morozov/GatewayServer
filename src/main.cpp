@@ -6,12 +6,13 @@
 #include <protocol/protocol.h>
 
 #include "tools/log/Logger.h"
+#include "sdk/context/WorkersPool.h"
 
 #include <boost/program_options.hpp>
 
 
 #include <iostream>
-
+#include <thread>
 
 constexpr const char* userOpt = "name";
 constexpr const char* passOpt = "pass";
@@ -58,5 +59,21 @@ int main(int argc, char *argv[])
 {
     auto params = setParameters(argc, argv);
     goodok::log::configure(goodok::log::Level::info);
-    goodok::log::write(goodok::log::Level::info, "Main", boost::format("test message from %1%") % "focus");
+
+    auto task = []()
+    {
+        static int value = 0;
+        goodok::log::write(goodok::log::Level::info,
+                           "TaskLambda",
+                           boost::format("current counter = %1%") % value);
+        ++value;
+    };
+
+    {
+        goodok::WorkersPoolPtr worker = std::make_shared<goodok::WorkersPool>();
+
+        worker->post(task);
+        worker->post(task);
+        worker->post(task);
+    }
 }

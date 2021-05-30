@@ -18,7 +18,7 @@ include_directories(SYSTEM
 file(GLOB FILES_SRC
         "src/*.cpp"
         "src/tools/log/*.cpp"
-        "src/sdk/network/*.cpp"
+        "src/sdk/context/*.cpp"
 )
 
 add_executable(${APP_NAME} ${FILES_SRC})
@@ -34,8 +34,10 @@ set_target_properties(${APP_NAME} PROPERTIES
 )
 
 target_include_directories(${APP_NAME}
+        PUBLIC
+            "${CMAKE_SOURCE_DIR}/src"
         PRIVATE
-        "/usr/local/include/goodok"
+            "/usr/local/include/goodok"
 )
 target_link_libraries(${APP_NAME}
         ${PROTOCOL}
