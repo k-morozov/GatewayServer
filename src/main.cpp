@@ -6,7 +6,7 @@
 #include <protocol/protocol.h>
 
 #include "tools/log/Logger.h"
-#include "sdk/context/WorkersPool.h"
+#include "sdk/context/AsyncContext.h"
 
 #include <boost/program_options.hpp>
 
@@ -60,20 +60,21 @@ int main(int argc, char *argv[])
     auto params = setParameters(argc, argv);
     goodok::log::configure(goodok::log::Level::info);
 
-    auto task = []()
+    std::atomic<int> value = 0;
+    auto task = [&value]()
     {
-        static int value = 0;
+
         goodok::log::write(goodok::log::Level::info,
                            "TaskLambda",
                            boost::format("current counter = %1%") % value);
         ++value;
     };
 
+    goodok::AsyncContext context;
     {
-        goodok::WorkersPoolPtr worker = std::make_shared<goodok::WorkersPool>();
-
-        worker->post(task);
-        worker->post(task);
-        worker->post(task);
+        context.runAsync(task);
+        context.runAsync(task);
+        goodok::log::write(goodok::log::Level::info, "main", "test #1");
+        context.runAsync(task);
     }
 }

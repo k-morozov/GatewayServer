@@ -55,7 +55,7 @@ namespace goodok {
                            ex.what());
             }
 
-        }
+        } // end for
     }
 
 } // end namespace goodok

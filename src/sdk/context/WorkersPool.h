@@ -48,11 +48,11 @@ namespace goodok {
     {
         counter_.startTask();
         io_context_.post(
-                         [this, Func{std::forward<Task>(task)}]() mutable
-                         {
-                             Func();
-                             counter_.endTask();
-                         });
+            [this, Func{std::forward<Task>(task)}]() mutable
+            {
+                Func();
+                counter_.endTask();
+            });
     }
 
 } // end namespace goodok
