@@ -22,7 +22,6 @@ struct Params
 {
     std::string username;
     std::string password;
-    std::string sessionFile;
 };
 
 Params setParameters(int argc, char** argv) {
@@ -33,8 +32,8 @@ Params setParameters(int argc, char** argv) {
         po::options_description desc("Allowed options");
         desc.add_options()
                 ("help, h", "produce help message")
-                (userOpt, po::value<std::string>(), "username for instagram account")
-                (passOpt, po::value<std::string>(), "password for instagram account");
+                (userOpt, po::value<std::string>(), "username")
+                (passOpt, po::value<std::string>(), "password");
 
         po::variables_map vm;
         po::store(po::parse_command_line(argc, argv, desc), vm);

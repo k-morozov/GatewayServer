@@ -18,7 +18,9 @@ include_directories(SYSTEM
 file(GLOB FILES_SRC
         "src/*.cpp"
         "src/tools/log/*.cpp"
+        "src/sdk/network/*.cpp"
 )
+
 add_executable(${APP_NAME} ${FILES_SRC})
 unset(FILES_SRC)
 
