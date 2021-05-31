@@ -9,14 +9,14 @@ namespace goodok {
     AsyncContext::AsyncContext() :
         workers_(std::make_unique<WorkersPool>(2))
     {
-        log::write(log::Level::info,
+        log::write(log::Level::debug,
                    "AsyncContext",
                    "ctor done");
     }
 
     AsyncContext::~AsyncContext()
     {
-        log::write(log::Level::info,
+        log::write(log::Level::debug,
                    "AsyncContext",
                    "dtor done");
     }

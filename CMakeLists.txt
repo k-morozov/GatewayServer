@@ -21,6 +21,7 @@ file(GLOB FILES_SRC
         "src/*.cpp"
         "src/tools/log/*.cpp"
         "src/sdk/context/*.cpp"
+        "src/sdk/network/*.cpp"
 )
 
 add_executable(${APP_NAME} ${FILES_SRC})

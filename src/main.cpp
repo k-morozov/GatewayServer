@@ -7,6 +7,7 @@
 
 #include "tools/log/Logger.h"
 #include "sdk/context/AsyncContext.h"
+#include "sdk/network/Network.h"
 
 #include <boost/program_options.hpp>
 
@@ -55,21 +56,10 @@ Params setParameters(int argc, char** argv) {
 int main(int argc, char *argv[])
 {
     auto params = setParameters(argc, argv);
-    goodok::log::configure(goodok::log::Level::info);
+    goodok::log::configure(goodok::log::Level::debug);
 
-    auto task = [](std::string const& text)
-    {
-        goodok::log::write(goodok::log::Level::info,
-                           "TaskLambda",
-                           text);
-    };
+    auto ctx = std::make_shared<goodok::AsyncContext>();
+    auto nwk = std::make_shared<goodok::Network>(ctx, 7777);
 
-    goodok::AsyncContextSPtr context = std::make_shared<goodok::AsyncContext>();
-    goodok::AsyncContextWeakPtr ctxWeak = context;
-    {
-        goodok::AsyncContext::runAsync(ctxWeak, task, "first");
-        goodok::AsyncContext::runAsync(ctxWeak, task, "second");
-        goodok::log::write(goodok::log::Level::info, "main", "test #1");
-        goodok::AsyncContext::runAsync(ctxWeak, task, "third");
-    }
+    nwk->run();
 }
