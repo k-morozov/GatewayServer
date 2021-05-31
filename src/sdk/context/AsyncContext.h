@@ -22,13 +22,14 @@ namespace goodok {
         AsyncContext();
         ~AsyncContext();
 
-        template<class Task>
-        void runAsync(Task &&task) const;
-
         template<class Function, class ... Args>
         static void runAsync(AsyncContextWeakPtr const& weakCtx, Function && func,  Args &&... args);
     private:
         mutable std::unique_ptr<WorkersPool> workers_;
+
+    private:
+        template<class Task>
+        void runAsync(Task &&task) const;
     };
 
     template<class Task>
@@ -38,6 +39,7 @@ namespace goodok {
             log::write(log::Level::error,
                        "AsyncContext",
                        "workers_ not valid");
+            return;
         }
 
         workers_->post(std::forward<Task>(task));

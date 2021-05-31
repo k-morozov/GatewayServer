@@ -11,6 +11,8 @@ include(${CONAN_LIB_DIRS_PROTOBUF}/cmake/protobuf/protobuf-module.cmake)
 include(${CONAN_LIB_DIRS_PROTOBUF}/cmake/protobuf/protobuf-generate.cmake)
 find_library(PROTOCOL NAMES protocol_lib HINTS "/usr/local/lib/goodok")
 
+include_directories("${CMAKE_SOURCE_DIR}/src")
+
 include_directories(SYSTEM
         ${CONAN_INCLUDE_DIRS_BOOST}
 )
@@ -34,8 +36,6 @@ set_target_properties(${APP_NAME} PROPERTIES
 )
 
 target_include_directories(${APP_NAME}
-        PUBLIC
-            "${CMAKE_SOURCE_DIR}/src"
         PRIVATE
             "/usr/local/include/goodok"
 )

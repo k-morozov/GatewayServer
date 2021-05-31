@@ -3,25 +3,90 @@
 //
 
 #include "gtest/gtest.h"
-//#include <protocol.h>
 
-//using namespace goodok;
+#include "sdk/context/AsyncContext.h"
 
-TEST(testServer, simpleTest) {
-//    std::string login = "login";
-//    std::string password = "123";
-//
-//    auto res = MsgFactory::serialize<command::TypeCommand::RegistrationRequest>(login, password);
-//    Serialize::Header header;
-//    header.ParseFromArray(res.data(), goodok::SIZE_HEADER);
-//    EXPECT_EQ(static_cast<command::TypeCommand>(header.command()), command::TypeCommand::RegistrationRequest);
-//
-//    std::size_t length = header.length();
-//    Serialize::Request request;
-//    request.ParseFromArray(res.data() + goodok::SIZE_HEADER, static_cast<int>(length));
-//
-//    EXPECT_TRUE(request.has_registration_request());
-//    EXPECT_EQ(request.registration_request().login(), login);
-//    EXPECT_EQ(request.registration_request().password(), password);
+#include <future>
+
+using namespace goodok;
+
+class TestContext : public ::testing::Test {
+public:
+    TestContext() {
+        ctx = std::make_shared<goodok::AsyncContext>();
+    }
+
+    auto getWeakContext() {
+        return std::weak_ptr<goodok::AsyncContext>(ctx);
+    }
+
+private:
+    goodok::AsyncContextSPtr ctx;
+};
+
+TEST_F(TestContext, simpleOneTask) {
+    bool status = false;
+    auto promise = std::make_shared<std::promise<void>>();
+    auto future = promise->get_future();
+
+    auto task = [&status, promise]() {
+        status = true;
+        promise->set_value();
+    };
+
+    goodok::AsyncContext::runAsync(getWeakContext(), task);
+
+    future.get();
+
+    bool expected = true;
+    ASSERT_EQ(status, expected);
 }
 
+TEST_F(TestContext, simpleSomeTaskLine) {
+    std::atomic<int> status = 0;
+    auto promise1 = std::make_shared<std::promise<void>>();
+    auto future1 = promise1->get_future();
+    auto task1 = [&status, promise1]() {
+        ++status;
+        promise1->set_value();
+    };
+
+    auto promise2 = std::make_shared<std::promise<void>>();
+    auto future2 = promise2->get_future();
+    auto task2 = [&status, promise2]() {
+        ++status;
+        promise2->set_value();
+    };
+
+    goodok::AsyncContext::runAsync(getWeakContext(), task1);
+    goodok::AsyncContext::runAsync(getWeakContext(), task2);
+
+    future1.get();
+    future2.get();
+
+    int expected = 2;
+
+    ASSERT_EQ(status, expected);
+}
+
+TEST_F(TestContext, simpleTwoTaskFromPrev) {
+    std::atomic<int> status = 0;
+    auto promise = std::make_shared<std::promise<void>>();
+    auto future = promise->get_future();
+    auto task = [&status, promise, ctx{getWeakContext()}]() {
+        ++status;
+
+        auto task = [&status, promise]() {
+            ++status;
+            promise->set_value();
+        };
+        goodok::AsyncContext::runAsync(ctx, task);
+    };
+
+    goodok::AsyncContext::runAsync(getWeakContext(), task);
+
+    future.get();
+
+    int expected = 2;
+    ASSERT_EQ(status, expected);
+}
