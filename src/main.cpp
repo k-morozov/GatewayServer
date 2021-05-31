@@ -57,21 +57,19 @@ int main(int argc, char *argv[])
     auto params = setParameters(argc, argv);
     goodok::log::configure(goodok::log::Level::info);
 
-    std::atomic<int> value = 0;
-    auto task = [&value]()
+    auto task = [](std::string const& text)
     {
-
         goodok::log::write(goodok::log::Level::info,
                            "TaskLambda",
-                           boost::format("current counter = %1%") % value);
-        ++value;
+                           text);
     };
 
-    goodok::AsyncContext context;
+    goodok::AsyncContextSPtr context = std::make_shared<goodok::AsyncContext>();
+    goodok::AsyncContextWeakPtr ctxWeak = context;
     {
-        context.runAsync(task);
-        context.runAsync(task);
+        goodok::AsyncContext::runAsync(ctxWeak, task, "first");
+        goodok::AsyncContext::runAsync(ctxWeak, task, "second");
         goodok::log::write(goodok::log::Level::info, "main", "test #1");
-        context.runAsync(task);
+        goodok::AsyncContext::runAsync(ctxWeak, task, "third");
     }
 }
