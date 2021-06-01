@@ -7,10 +7,7 @@ set(APP_NAME gateway-server)
 set(FILES_SRC
         "main.cpp"
         "${CMAKE_SOURCE_DIR}/src/tools/log/Logger.cpp"
-        "${CMAKE_SOURCE_DIR}/src/sdk/context/AsyncContext.cpp"
-        "${CMAKE_SOURCE_DIR}/src/sdk/context/WorkersPool.cpp"
-        "${CMAKE_SOURCE_DIR}/src/sdk/network/Network.cpp"
-        "${CMAKE_SOURCE_DIR}/src/sdk/network/Session.cpp")
+)
 
 add_executable(${APP_NAME} ${FILES_SRC})
 
@@ -29,5 +26,5 @@ target_include_directories(${APP_NAME}
 target_link_libraries(${APP_NAME}
         ${PROTOCOL}
         ${CONAN_LIBS}
-#        sdk-goodok
+        sdk-goodok
 )

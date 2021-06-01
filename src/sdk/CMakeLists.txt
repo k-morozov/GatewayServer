@@ -5,7 +5,7 @@ project(sdk-goodok)
 set(APP_NAME sdk-goodok)
 
 file(GLOB FILES_SRC
-        "src/tools/log/Logger.cpp"
+        "${CMAKE_SOURCE_DIR}/src/tools/log/Logger.cpp"
         "context/*.cpp"
         "network/*.cpp")
 
