@@ -7,28 +7,33 @@
 #include <boost/asio/yield.hpp>
 
 namespace goodok {
-    Session::Session(boost::asio::ip::tcp::socket && socket) :
+
+    Session::Session(AsyncContextWeakPtr ctxWeak, boost::asio::ip::tcp::socket && socket) :
+        ctx_(ctxWeak),
         socket_(std::move(socket))
     {
         log::write(log::Level::debug, "Session", "ctor done");
-        run();
+        runRead();
     }
 
 
-    void Session::run(boost::system::error_code, std::size_t )
+    void Session::runRead(boost::system::error_code, std::size_t)
     {
+        auto task = [](std::string const& text)
+        {
+            log::write(log::Level::debug, "Session", text);
+        };
         reenter(coroCommunicate_) for(;;)
         {
             yield boost::asio::async_read(socket_,
                                           boost::asio::buffer(buffer_, 3),
-                                          std::bind(&Session::run, this,
+                                          std::bind(&Session::runRead, this,
                                                     std::placeholders::_1, std::placeholders::_2));
+            AsyncContext::runAsync(ctx_, task, buffer_);
 
-            log::write(log::Level::debug, "Session",
-                       boost::format("read: %1%") % buffer_);
             yield boost::asio::async_write(socket_,
                                            boost::asio::buffer("ok", 3),
-                                          std::bind(&Session::run, this,
+                                          std::bind(&Session::runRead, this,
                                                     std::placeholders::_1, std::placeholders::_2));
         }
     }

@@ -40,7 +40,6 @@ namespace goodok {
     private:
         void runAccept();
         void doAccept(boost::system::error_code = {});
-        void doRead(tcp::socket, boost::system::error_code = {}, std::size_t n = 0);
     };
 
 } // end namespace goodok
