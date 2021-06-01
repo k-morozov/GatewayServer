@@ -10,7 +10,7 @@ namespace goodok {
 
 
     Network::Network(AsyncContextWeakPtr ctxWeak, int port) :
-            ctx_(ctxWeak),
+            ctx_(std::move(ctxWeak)),
             port_(port),
             endpoint_(tcp::v4(), port_),
             acceptor_(networkContext_, endpoint_),
@@ -42,7 +42,7 @@ namespace goodok {
     {
         reenter(coroAccept_) for(;;)
         {
-            log::write(log::Level::trace, "Network", "start wait accept");
+            log::write(log::Level::trace, "Network", "wait accept...");
             yield acceptor_.async_accept(socket_,
                                          std::bind(&Network::doAccept, this, std::placeholders::_1));
             log::write(log::Level::debug, "Network", "new connection");
