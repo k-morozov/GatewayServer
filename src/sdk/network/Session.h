@@ -16,6 +16,14 @@
 namespace goodok {
 
 
+    namespace Impl {
+        struct CoroData {
+            boost::asio::coroutine coro_;
+            char bufferHeader_[3];
+            char bufferBody_[3];
+        };
+    }
+
     class Session {
     public:
         Session(AsyncContextWeakPtr ctxWeak, boost::asio::ip::tcp::socket &&socket);
@@ -23,9 +31,9 @@ namespace goodok {
     private:
         AsyncContextWeakPtr ctx_;
         boost::asio::ip::tcp::socket socket_;
-        boost::asio::coroutine coroCommunicate_;
 
-        char buffer_[3];
+        Impl::CoroData coroData_;
+
     private:
         void runRead(boost::system::error_code = {}, std::size_t = 0);
     };

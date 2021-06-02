@@ -6,6 +6,8 @@
 
 #include <boost/asio/yield.hpp>
 
+#include <algorithm>
+
 namespace goodok {
 
     Session::Session(AsyncContextWeakPtr ctxWeak, boost::asio::ip::tcp::socket && socket) :
@@ -26,26 +28,38 @@ namespace goodok {
             return;
         }
 
-        static auto task = [](std::string const& text)
+        static auto task = [](std::string text)
         {
-            log::write(log::Level::debug, "Session", text);
+//            std::erase(text, '\n');
+            text.erase(text.find('\n'));
+            log::write(log::Level::debug, "Session", boost::format("read: size = %1%, text=[%2%]") % text.size() % text);
         };
 
         auto callback = [this](boost::system::error_code ec, std::size_t nbytes) {
             runRead(ec, nbytes);
         };
 
-        reenter(coroCommunicate_) for(;;)
+        reenter(coroData_.coro_) for(;;)
         {
+            log::write(log::Level::debug, "Session", "read header");
             yield boost::asio::async_read(socket_,
-                                          boost::asio::buffer(buffer_, 3),
+                                          boost::asio::buffer(coroData_.bufferHeader_, 3),
                                           callback);
-            AsyncContext::runAsync(ctx_, task, buffer_);
+            // @TODO prepare headers
+            // read body
+            log::write(log::Level::debug, "Session", "read body");
+            yield boost::asio::async_read(socket_,
+                                          boost::asio::buffer(coroData_.bufferBody_, 3),
+                                          callback);
 
-            yield boost::asio::async_write(socket_,
-                                           boost::asio::buffer("ok", 3),
-                                          std::bind(&Session::runRead, this,
-                                                    std::placeholders::_1, std::placeholders::_2));
+            // @TODO send new data after read
+            AsyncContext::runAsync(ctx_, task, coroData_.bufferHeader_);
+            AsyncContext::runAsync(ctx_, task, coroData_.bufferBody_);
+
+//            yield boost::asio::async_write(socket_,
+//                                           boost::asio::buffer("ok", 3),
+//                                          std::bind(&Session::runReadHeader, this,
+//                                                    std::placeholders::_1, std::placeholders::_2));
         }
     }
 
