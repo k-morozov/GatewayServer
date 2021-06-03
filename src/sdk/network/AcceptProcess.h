@@ -6,7 +6,7 @@
 #define GOODOK_FRONT_SERVER_NETWORK_H
 
 #include "sdk/context/AsyncContext.h"
-#include "Session.h"
+#include "sdk/network/session/Session.h"
 
 #include "tools/log/Logger.h"
 
@@ -19,7 +19,7 @@
 namespace goodok {
 
     template <class T>
-    concept ConceptSessionType = (std::same_as<T, goodok::Session>);
+    concept ConceptSessionType = (std::derived_from<T, goodok::ISession>);
 
     template<ConceptSessionType SessionType>
     class AcceptProcess {

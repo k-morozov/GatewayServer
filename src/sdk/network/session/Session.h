@@ -8,13 +8,13 @@
 #include "tools/log/Logger.h"
 
 #include "sdk/context/AsyncContext.h"
+#include "ISession.h"
 
 #include <boost/asio.hpp>
 #include <boost/asio/coroutine.hpp>
 
 
 namespace goodok {
-
 
     namespace Impl {
         struct CoroData {
@@ -24,11 +24,11 @@ namespace goodok {
         };
     }
 
-    class Session {
+    class Session : public ISession {
     public:
         Session(AsyncContextWeakPtr ctxWeak, boost::asio::ip::tcp::socket &&socket);
 
-        void start();
+        void start() override;
     private:
         AsyncContextWeakPtr ctx_;
         boost::asio::ip::tcp::socket socket_;

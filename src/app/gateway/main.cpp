@@ -8,7 +8,7 @@
 #include "tools/log/Logger.h"
 #include "sdk/context/AsyncContext.h"
 #include "sdk/network/AcceptProcess.h"
-#include "sdk/network/Session.h"
+#include "sdk/network/session/Session.h"
 
 #include <boost/program_options.hpp>
 

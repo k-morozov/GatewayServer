@@ -2,7 +2,7 @@
 // Created by focus on 31.05.2021.
 //
 
-#include "Session.h"
+#include "sdk/network/session/Session.h"
 
 #include <boost/asio/yield.hpp>
 
