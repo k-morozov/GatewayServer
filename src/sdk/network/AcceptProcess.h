@@ -14,10 +14,14 @@
 #include <boost/asio/coroutine.hpp>
 #include <boost/asio/yield.hpp>
 
+#include <concepts>
 
 namespace goodok {
 
-    template<typename SessionType>
+    template <class T>
+    concept ConceptSessionType = (std::same_as<T, goodok::Session>);
+
+    template<ConceptSessionType SessionType>
     class AcceptProcess {
         using io_context = boost::asio::io_context;
         using tcp = boost::asio::ip::tcp;
@@ -48,7 +52,7 @@ namespace goodok {
     // realisation
 
 
-    template <typename T>
+    template <ConceptSessionType T>
     AcceptProcess<T>::AcceptProcess(AsyncContextWeakPtr ctxWeak, int port) :
             ctx_(std::move(ctxWeak)),
             port_(port),
@@ -60,7 +64,7 @@ namespace goodok {
         log::write(log::Level::debug, "Network", "ctor done");
     }
 
-    template <typename T>
+    template <ConceptSessionType T>
     AcceptProcess<T>::~AcceptProcess()
     {
         networkContext_.stop();
@@ -71,19 +75,19 @@ namespace goodok {
         log::write(log::Level::debug, "Network", "dtor done");
     }
 
-    template <typename T>
+    template <ConceptSessionType T>
     void AcceptProcess<T>::run()
     {
         networkContext_.run();
     }
 
-    template <typename T>
+    template <ConceptSessionType T>
     void AcceptProcess<T>::runAccept()
     {
         doAccept();
     }
 
-    template <typename T>
+    template <ConceptSessionType T>
     void AcceptProcess<T>::doAccept(boost::system::error_code)
     {
         // @TODO error code checker?

@@ -12,15 +12,7 @@
 
 #include <boost/program_options.hpp>
 
-
 #include <iostream>
-#include <concepts>
-
-template <class T>
-concept Test =
-        requires(T a, T b) {
-            {*a < *b} ->std::convertible_to<bool>;
-        };
 
 constexpr const char* userOpt = "name";
 constexpr const char* passOpt = "pass";
@@ -61,6 +53,14 @@ Params setParameters(int argc, char** argv) {
     return params;
 }
 
+class SessionTest {
+public:
+    SessionTest(goodok::AsyncContextWeakPtr , boost::asio::ip::tcp::socket &&) {
+        std::cout << "Fake Session ctor" << std::endl;
+    }
+
+    void start() {}
+};
 int main(int argc, char *argv[])
 {
     auto params = setParameters(argc, argv);
@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
     goodok::log::write(goodok::log::Level::info, "main", std::to_string(__cplusplus));
     auto ctx = std::make_shared<goodok::AsyncContext>();
     auto nwk = std::make_shared<goodok::AcceptProcess<goodok::Session>>(ctx, 7777);
+//    auto nwk = std::make_shared<goodok::AcceptProcess<SessionTest>>(ctx, 7777);
 
     nwk->run();
 }
