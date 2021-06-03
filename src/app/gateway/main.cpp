@@ -2,22 +2,25 @@
 // Created by focus on 02.05.2021.
 //
 
-#include <iostream>
+
 #include <protocol/protocol.h>
-#include "tools/Logger.h"
+
+#include "tools/log/Logger.h"
+#include "sdk/context/AsyncContext.h"
+#include "sdk/network/AcceptProcess.h"
+#include "sdk/network/Session.h"
 
 #include <boost/program_options.hpp>
 
+#include <iostream>
+
 constexpr const char* userOpt = "name";
 constexpr const char* passOpt = "pass";
-constexpr const char* helpOpt = "help";
-constexpr const char* logLvl = "";
 
 struct Params
 {
     std::string username;
     std::string password;
-    std::string sessionFile;
 };
 
 Params setParameters(int argc, char** argv) {
@@ -28,8 +31,8 @@ Params setParameters(int argc, char** argv) {
         po::options_description desc("Allowed options");
         desc.add_options()
                 ("help, h", "produce help message")
-                (userOpt, po::value<std::string>(), "username for instagram account")
-                (passOpt, po::value<std::string>(), "password for instagram account");
+                (userOpt, po::value<std::string>(), "username")
+                (passOpt, po::value<std::string>(), "password");
 
         po::variables_map vm;
         po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -50,9 +53,23 @@ Params setParameters(int argc, char** argv) {
     return params;
 }
 
+class SessionTest {
+public:
+    SessionTest(goodok::AsyncContextWeakPtr , boost::asio::ip::tcp::socket &&) {
+        std::cout << "Fake Session ctor" << std::endl;
+    }
+
+    void start() {}
+};
 int main(int argc, char *argv[])
 {
     auto params = setParameters(argc, argv);
-    goodok::log::configure(boost::log::trivial::severity_level::info);
-    goodok::log::write(boost::log::trivial::severity_level::info, "Test logger");
+    goodok::log::configure(goodok::log::Level::debug);
+
+    goodok::log::write(goodok::log::Level::info, "main", std::to_string(__cplusplus));
+    auto ctx = std::make_shared<goodok::AsyncContext>();
+    auto nwk = std::make_shared<goodok::AcceptProcess<goodok::Session>>(ctx, 7777);
+//    auto nwk = std::make_shared<goodok::AcceptProcess<SessionTest>>(ctx, 7777);
+
+    nwk->run();
 }
