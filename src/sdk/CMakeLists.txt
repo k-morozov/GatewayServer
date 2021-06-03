@@ -7,7 +7,9 @@ set(APP_NAME sdk-goodok)
 file(GLOB FILES_SRC
         "${CMAKE_SOURCE_DIR}/src/tools/log/Logger.cpp"
         "context/*.cpp"
-        "network/*.cpp")
+        "network/AcceptProcess.h"
+        "network/*.cpp"
+)
 
 add_library(${APP_NAME} STATIC ${FILES_SRC})
 

@@ -15,6 +15,10 @@ namespace goodok {
         socket_(std::move(socket))
     {
         log::write(log::Level::debug, "Session", "ctor done");
+    }
+
+    void Session::start()
+    {
         runRead();
     }
 
@@ -30,7 +34,6 @@ namespace goodok {
 
         static auto task = [](std::string text)
         {
-//            std::erase(text, '\n');
             text.erase(text.find('\n'));
             log::write(log::Level::debug, "Session", boost::format("read: size = %1%, text=[%2%]") % text.size() % text);
         };

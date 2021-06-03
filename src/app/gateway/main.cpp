@@ -7,7 +7,8 @@
 
 #include "tools/log/Logger.h"
 #include "sdk/context/AsyncContext.h"
-#include "sdk/network/Network.h"
+#include "sdk/network/AcceptProcess.h"
+#include "sdk/network/Session.h"
 
 #include <boost/program_options.hpp>
 
@@ -58,8 +59,9 @@ int main(int argc, char *argv[])
     auto params = setParameters(argc, argv);
     goodok::log::configure(goodok::log::Level::debug);
 
+    goodok::log::write(goodok::log::Level::info, "main", std::to_string(__cplusplus));
     auto ctx = std::make_shared<goodok::AsyncContext>();
-    auto nwk = std::make_shared<goodok::Network>(ctx, 7777);
+    auto nwk = std::make_shared<goodok::AcceptProcess<goodok::Session>>(ctx, 7777);
 
     nwk->run();
 }

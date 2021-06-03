@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
 set(APP_NAME ut_server)
-#set(CONAN_DISABLE_CHECK_COMPILER TRUE)
 
 file(GLOB SRC_FILES
         "${CMAKE_SOURCE_DIR}/src/tools/log/*.cpp"

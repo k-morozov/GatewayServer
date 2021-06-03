@@ -28,6 +28,7 @@ namespace goodok {
     public:
         Session(AsyncContextWeakPtr ctxWeak, boost::asio::ip::tcp::socket &&socket);
 
+        void start();
     private:
         AsyncContextWeakPtr ctx_;
         boost::asio::ip::tcp::socket socket_;
