@@ -40,7 +40,7 @@ jobs:
 
       - name: Build
         run:  |
-          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=/usr/bin/g++10
 
 #      - name: Test
 #        run: |
