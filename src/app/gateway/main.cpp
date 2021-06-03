@@ -14,6 +14,13 @@
 
 
 #include <iostream>
+#include <concepts>
+
+template <class T>
+concept Test =
+        requires(T a, T b) {
+            {*a < *b} ->std::convertible_to<bool>;
+        };
 
 constexpr const char* userOpt = "name";
 constexpr const char* passOpt = "pass";
