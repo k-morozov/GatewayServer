@@ -28,7 +28,7 @@ namespace goodok {
         ~AsyncContext();
 
         template<class Func, class ... Args,
-                typename = std::enable_if<std::is_invocable<Func, Args...>::value>>
+                typename std::enable_if<std::is_invocable<Func, Args...>::value>::type* = nullptr>
         static void runAsync(AsyncContextWeakPtr const& weakCtx, Func && func, Args &&... args)
         {
             if (auto ctx = weakCtx.lock())
