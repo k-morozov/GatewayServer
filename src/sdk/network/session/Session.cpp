@@ -32,9 +32,12 @@ namespace goodok {
             return;
         }
 
-        static auto task = [](std::string text)
+        auto task = [](std::string text)
         {
-            text.erase(text.find('\n'));
+            if (auto it = text.find('\n'); it != std::string::npos)
+            {
+                text.erase(it);
+            }
             log::write(log::Level::debug, "Session", boost::format("read: size = %1%, text=[%2%]") % text.size() % text);
         };
 
@@ -56,8 +59,12 @@ namespace goodok {
                                           callback);
 
             // @TODO send new data after read
+
+//            task("test");
+//            std::cout << "result = " << std::is_invocable<decltype(task), std::string>::value << std::endl;
             AsyncContext::runAsync(ctx_, task, coroData_.bufferHeader_);
             AsyncContext::runAsync(ctx_, task, coroData_.bufferBody_);
+//            AsyncContext::runAsync(ctx_, task);
 
 //            yield boost::asio::async_write(socket_,
 //                                           boost::asio::buffer("ok", 3),
