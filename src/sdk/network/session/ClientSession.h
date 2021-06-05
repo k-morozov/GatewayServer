@@ -16,11 +16,13 @@
 #include <memory>
 #include <execution>
 
+#define REMOVE_CONVERT_BODY
+
 namespace goodok {
 
     namespace detail {
         constexpr std::size_t MAX_SIZE_HEADER_BUFFER = 3;
-        constexpr std::size_t MAX_SIZE_BODY_BUFFER = 4;
+        constexpr std::size_t MAX_SIZE_BODY_BUFFER = 3;
 
         using buffer_t = std::vector<uint8_t>;
         using buffer_header_t = std::array<uint8_t, MAX_SIZE_HEADER_BUFFER>;
@@ -47,7 +49,6 @@ namespace goodok {
             return data;
         }
 
-//#define REMOVE_CONVERT_BODY
 #ifndef REMOVE_CONVERT_BODY
         static_assert(MAX_SIZE_HEADER_BUFFER!=MAX_SIZE_BODY_BUFFER, "need define REMOVE_CONVERT_BODY");
         inline std::string convert(buffer_body_t const& message) {
@@ -68,7 +69,7 @@ namespace goodok {
             explicit SocketWriter(std::weak_ptr<socket_t> sock);
             ~SocketWriter() = default;
 
-            void write(std::string);
+            void write(std::string const&);
         private:
             std::weak_ptr<socket_t> socketWeak_;
             std::list<buffer_t> bufferWrite_;
@@ -89,7 +90,7 @@ namespace goodok {
         ~ClientSession() override;
 
         void startRead() override;
-        void write(std::string) override;
+        void write(std::string const&) override;
 
     private:
         AsyncContextWeakPtr ctx_;
@@ -97,10 +98,6 @@ namespace goodok {
         std::shared_ptr<detail::SocketWriter> writer_;
 
         struct CoroData {
-//            CoroData():
-//                    bufferHeader_(detail::MAX_SIZE_HEADER_BUFFER),
-//                    bufferBody_(detail::MAX_SIZE_BODY_BUFFER)
-//            {}
             boost::asio::coroutine coro_;
             detail::buffer_header_t bufferHeader_;
             detail::buffer_body_t bufferBody_;

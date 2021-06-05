@@ -17,7 +17,7 @@ namespace goodok {
             log::write(log::Level::trace, "SocketWriter", "ctor done");
         }
 
-        void SocketWriter::write(std::string message)
+        void SocketWriter::write(std::string const& message)
         {
             processWrite = !bufferWrite_.empty();
             detail::buffer_t data = detail::convert(message);
@@ -83,7 +83,6 @@ namespace goodok {
         runRead();
     }
 
-
     void ClientSession::runRead(boost::system::error_code ec, std::size_t)
     {
         if (ec) {
@@ -129,7 +128,7 @@ namespace goodok {
         }
     }
 
-    void ClientSession::write(std::string message)
+    void ClientSession::write(std::string const& message)
     {
         writer_->write(message);
     }

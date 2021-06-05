@@ -55,12 +55,16 @@ Params setParameters(int argc, char** argv) {
 
 int main(int argc, char *argv[])
 {
-    auto params = setParameters(argc, argv);
-    goodok::log::configure(goodok::log::Level::debug);
+    try {
+        auto params = setParameters(argc, argv);
+        goodok::log::configure(goodok::log::Level::debug);
 
-//    goodok::log::write(goodok::log::Level::info, "main", std::to_string(__cplusplus));
-    auto ctx = std::make_shared<goodok::AsyncContext>();
-    auto nwk = std::make_shared<goodok::AcceptProcess<goodok::ClientSession>>(ctx, 7777);
+        auto ctx = std::make_shared<goodok::AsyncContext>();
+        auto nwk = std::make_shared<goodok::AcceptProcess<goodok::ClientSession>>(ctx, 7777);
 
-    nwk->run();
+        nwk->run();
+    } catch (std::exception & ex) {
+        goodok::log::write(goodok::log::Level::fatal, "main", ex.what());
+    }
+
 }

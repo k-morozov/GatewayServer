@@ -10,7 +10,7 @@ namespace goodok {
     class ISession {
     public:
         virtual void startRead() = 0;
-        virtual void write(std::string) = 0;
+        virtual void write(std::string const&) = 0;
         virtual ~ISession() = default;
     };
 
