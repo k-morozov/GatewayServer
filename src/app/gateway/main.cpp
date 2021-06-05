@@ -6,6 +6,7 @@
 #include <protocol/protocol.h>
 
 #include "tools/log/Logger.h"
+#include "sdk/common/MakeSharedHelper.h"
 #include "sdk/context/AsyncContext.h"
 #include "sdk/network/AcceptProcess.h"
 #include "sdk/network/session/ClientSession.h"
@@ -60,7 +61,9 @@ int main(int argc, char *argv[])
         goodok::log::configure(goodok::log::Level::debug);
 
         auto ctx = std::make_shared<goodok::AsyncContext>();
-        auto nwk = std::make_shared<goodok::AcceptProcess<goodok::ClientSession>>(ctx, 7777);
+
+        using AcceptType = goodok::AcceptProcess<goodok::ClientSession>;
+        auto nwk = std::make_shared<MakeSharedHelper<AcceptType>>(ctx, 7777);
 
         nwk->run();
     } catch (std::exception & ex) {

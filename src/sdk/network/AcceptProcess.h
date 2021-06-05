@@ -5,6 +5,7 @@
 #ifndef GOODOK_FRONT_SERVER_NETWORK_H
 #define GOODOK_FRONT_SERVER_NETWORK_H
 
+#include "sdk/common/MakeSharedHelper.h"
 #include "sdk/context/AsyncContext.h"
 #include "sdk/network/session/ClientSession.h"
 
@@ -26,9 +27,12 @@ namespace goodok {
         using io_context = boost::asio::io_context;
         using tcp = boost::asio::ip::tcp;
     public:
-        explicit AcceptProcess(AsyncContextWeakPtr ctx, int port = 7777);
         ~AcceptProcess();
 
+    protected:
+        explicit AcceptProcess(AsyncContextWeakPtr ctx, int port = 7777);
+
+    public:
         void run();
 
     private:
@@ -97,7 +101,8 @@ namespace goodok {
             yield acceptor_.async_accept(socket_,
                                          std::bind(&AcceptProcess::doAccept, this, std::placeholders::_1));
             log::write(log::Level::debug, "Network", "new connection");
-            sessions_.emplace_back(std::make_shared<T>(ctx_, std::move(socket_)));
+            auto session = std::make_shared<MakeSharedHelper<T>>(ctx_, std::move(socket_));
+            sessions_.emplace_back(session);
             sessions_.back()->startRead();
             socket_.close();
         }

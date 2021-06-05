@@ -86,11 +86,14 @@ namespace goodok {
     {
         using socket_t = boost::asio::ip::tcp::socket;
     public:
-        ClientSession(AsyncContextWeakPtr ctxWeak, socket_t &&socket);
+
         ~ClientSession() override;
 
         void startRead() override;
         void write(std::string const&) override;
+
+    protected:
+        ClientSession(AsyncContextWeakPtr ctxWeak, socket_t &&socket);
 
     private:
         AsyncContextWeakPtr ctx_;
