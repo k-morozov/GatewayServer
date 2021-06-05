@@ -79,30 +79,28 @@ namespace goodok {
 
     void ClientSession::write(std::string message)
     {
-        // @TODO thread safe
-//        coroData_.bufferWrite_.push_back(message);
-
-//        auto task = [this](std::string const& text) {
-//            boost::asio::async_write(
-//                    socket_,
-//                    boost::asio::buffer(text),
-//                    [](boost::system::error_code ec, std::size_t bytes) {
-//                        log::write(log::Level::info, "SendHandler", "ok");
-//                    });
-//        };
-
-        AsyncContext::runAsync(ctx_,
-                               &ClientSession::writeImpl_,
-                               this, message);
+        processWrite = !bufferWrite_.empty();
+        bufferWrite_.push_back(message);
+        if (!processWrite) {
+            writeImpl_();
+        }
     }
 
-    void ClientSession::writeImpl_(std::string const& message)
+    void ClientSession::writeImpl_()
     {
+        auto callback = [selfWeak = detail::weak_from(shared_from_this())](boost::system::error_code , std::size_t ) {
+            log::write(log::Level::info, "SendHandler", "ok");
+            if (auto self = selfWeak.lock()) {
+                self->bufferWrite_.pop_front();
+                if (!self->bufferWrite_.empty()) {
+                    self->writeImpl_();
+                }
+            }
+        };
+
         boost::asio::async_write(
                 socket_,
-                boost::asio::buffer(message),
-                [](boost::system::error_code , std::size_t ) {
-                    log::write(log::Level::info, "SendHandler", "ok");
-                });
+                boost::asio::buffer(bufferWrite_.front()),
+                std::move(callback));
     }
 }

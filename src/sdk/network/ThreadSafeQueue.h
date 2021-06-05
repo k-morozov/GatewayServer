@@ -13,6 +13,9 @@ namespace detail {
 
     class ThreadSafeQueue {
     public:
+        ThreadSafeQueue() =default;
+        ~ThreadSafeQueue() = default;
+
     private:
 
     };

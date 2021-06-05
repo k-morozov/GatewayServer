@@ -13,21 +13,26 @@
 #include <boost/asio.hpp>
 #include <boost/asio/coroutine.hpp>
 
-
 namespace goodok {
 
-    namespace Impl {
+    namespace detail {
         struct CoroData {
             boost::asio::coroutine coro_;
             boost::asio::coroutine coroWrite_;
             char bufferHeader_[3];
             char bufferBody_[3];
-            std::list<std::string> bufferWrite_;
-            std::atomic<bool> isSendNow = false;
+
         };
+
+        template <class T>
+        std::weak_ptr<T> weak_from(std::shared_ptr<T> src) {
+            return src;
+        }
     }
 
-    class ClientSession : public ISession {
+    class ClientSession :
+            public std::enable_shared_from_this<ClientSession>,
+            public ISession {
     public:
         ClientSession(AsyncContextWeakPtr ctxWeak, boost::asio::ip::tcp::socket &&socket);
         ~ClientSession() override;
@@ -39,11 +44,14 @@ namespace goodok {
         AsyncContextWeakPtr ctx_;
         boost::asio::ip::tcp::socket socket_;
 
-        Impl::CoroData coroData_;
+        detail::CoroData coroData_;
+
+        std::list<std::string> bufferWrite_;
+        std::atomic<bool> processWrite = false;
 
     private:
         void runRead(boost::system::error_code = {}, std::size_t = 0);
-        void writeImpl_(std::string const& message);
+        void writeImpl_();
     };
 
 }
