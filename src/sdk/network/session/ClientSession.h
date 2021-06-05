@@ -19,10 +19,13 @@
 namespace goodok {
 
     namespace detail {
+        constexpr std::size_t MAX_SIZE_HEADER_BUFFER = 3;
+        constexpr std::size_t MAX_SIZE_BODY_BUFFER = 3;
+
         using buffer_t = std::vector<uint8_t>;
 
         template <class T>
-        std::weak_ptr<T> weak_from(std::shared_ptr<T> src) {
+        std::weak_ptr<T> weak_from(std::shared_ptr<T> const& src) {
             return src;
         }
 
@@ -31,7 +34,14 @@ namespace goodok {
             std::copy(std::execution::par,
                       std::begin(message), std::end(message),
                       std::begin(data));
-//            log::write(log::Level::info, "convert", boost::format("size convert = %1%") % data.size());
+            return data;
+        }
+
+        inline std::string convert(buffer_t const& message) {
+            std::string data;
+            std::copy(std::execution::par,
+                      std::begin(message), std::end(message),
+                      std::back_inserter(data));
             return data;
         }
 
@@ -71,9 +81,13 @@ namespace goodok {
         std::shared_ptr<detail::SocketWriter> writer_;
 
         struct CoroData {
+            CoroData():
+                    bufferHeader_(detail::MAX_SIZE_HEADER_BUFFER),
+                    bufferBody_(detail::MAX_SIZE_BODY_BUFFER)
+            {}
             boost::asio::coroutine coro_;
-            char bufferHeader_[3];
-            char bufferBody_[3];
+            detail::buffer_t bufferHeader_;
+            detail::buffer_t bufferBody_;
 
         };
         CoroData coroData_;

@@ -39,12 +39,17 @@ namespace goodok {
                         }
                     }
                 };
-                boost::asio::async_write(
-                        *socket,
-                        boost::asio::buffer(bufferWrite_.front()),
-                        std::move(callback));
+                if (socket) {
+                    boost::asio::async_write(
+                            *socket,
+                            boost::asio::buffer(bufferWrite_.front()),
+                            std::move(callback));
+                } else {
+                    log::write(log::Level::error, "SocketWriter", "async_write socket is close");
+                }
+
             } else {
-                log::write(log::Level::error, "SocketWriter", "socket is close");
+                log::write(log::Level::error, "SocketWriter", "writeImpl_ socket is close");
             }
         }
 
@@ -66,6 +71,7 @@ namespace goodok {
 
     ClientSession::~ClientSession()
     {
+//        @TODO check when socket close
         if (socket_ && socket_->is_open()) {
             socket_->close();
         }
@@ -87,12 +93,14 @@ namespace goodok {
             return;
         }
 
-        auto task = [](std::string textHeader, std::string textBody)
+        auto task = [](detail::buffer_t textHeader, detail::buffer_t textBody)
         {
             log::write(log::Level::debug, "ClientSession",
-                       boost::format("read header: size = %1%, text=[%2%]") % textHeader.size() % textHeader);
+                       boost::format("read header: size = %1%, text=[%2%]")
+                            % textHeader.size() % detail::convert(textHeader));
             log::write(log::Level::debug, "ClientSession",
-                       boost::format("read body: size = %1%, text=[%2%]") % textBody.size() % textBody);
+                       boost::format("read body: size = %1%, text=[%2%]")
+                        % textBody.size() % detail::convert(textBody));
         };
 
         auto callback = [this](boost::system::error_code ec, std::size_t nbytes) {
@@ -103,15 +111,15 @@ namespace goodok {
         {
             log::write(log::Level::debug, "ClientSession", "read header");
             yield boost::asio::async_read(*socket_,
-                                          boost::asio::buffer(coroData_.bufferHeader_, 3),
+                                          boost::asio::buffer(coroData_.bufferHeader_.data(), detail::MAX_SIZE_HEADER_BUFFER),
                                           callback);
 
             log::write(log::Level::debug, "ClientSession", "read body");
             yield boost::asio::async_read(*socket_,
-                                          boost::asio::buffer(coroData_.bufferBody_, 3),
+                                          boost::asio::buffer(coroData_.bufferBody_.data(), detail::MAX_SIZE_BODY_BUFFER),
                                           callback);
 
-            // @TODO send new data after read
+//             @TODO send new data after read
             AsyncContext::runAsync(ctx_, task, coroData_.bufferHeader_, coroData_.bufferBody_);
 
             write("ok1\n");
