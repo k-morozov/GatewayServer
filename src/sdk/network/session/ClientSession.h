@@ -43,7 +43,7 @@ namespace goodok {
 
     private:
         void runRead(boost::system::error_code = {}, std::size_t = 0);
-        void writeImpl_(boost::system::error_code = {}, std::size_t = 0);
+        void writeImpl_(std::string const& message);
     };
 
 }

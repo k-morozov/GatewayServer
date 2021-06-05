@@ -80,40 +80,29 @@ namespace goodok {
     void ClientSession::write(std::string message)
     {
         // @TODO thread safe
-        coroData_.bufferWrite_.push_back(message);
+//        coroData_.bufferWrite_.push_back(message);
 
-        // @TODO send to client
-        if (!coroData_.isSendNow) {
-            coroData_.isSendNow = true;
-            writeImpl_();
-        }
+//        auto task = [this](std::string const& text) {
+//            boost::asio::async_write(
+//                    socket_,
+//                    boost::asio::buffer(text),
+//                    [](boost::system::error_code ec, std::size_t bytes) {
+//                        log::write(log::Level::info, "SendHandler", "ok");
+//                    });
+//        };
+
+        AsyncContext::runAsync(ctx_,
+                               &ClientSession::writeImpl_,
+                               this, message);
     }
 
-    void ClientSession::writeImpl_(boost::system::error_code , std::size_t )
+    void ClientSession::writeImpl_(std::string const& message)
     {
-        if (coroData_.bufferWrite_.empty()) {
-            return;
-        }
-
-        reenter(coroData_.coroWrite_) for(;;)
-        {
-            yield boost::asio::async_write(
+        boost::asio::async_write(
                 socket_,
-                boost::asio::buffer(coroData_.bufferWrite_.front(), coroData_.bufferWrite_.front().size()),
-                std::bind(&ClientSession::writeImpl_, this,
-                          std::placeholders::_1, std::placeholders::_2)
-                );
-
-            log::write(log::Level::debug, "ClientSession",
-                       boost::format("Message send successfully. text = %1%") % coroData_.bufferWrite_.front());
-            coroData_.bufferWrite_.pop_front();
-        }
-
-//        if (coroData_.coroWrite_.is_complete()) {
-//            log::write(log::Level::debug, "ClientSession",
-//                       "send all messages to client");
-//        }
-
-        coroData_.isSendNow = false;
+                boost::asio::buffer(message),
+                [](boost::system::error_code , std::size_t ) {
+                    log::write(log::Level::info, "SendHandler", "ok");
+                });
     }
 }
