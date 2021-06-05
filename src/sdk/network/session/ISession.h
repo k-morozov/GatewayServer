@@ -11,6 +11,7 @@ namespace goodok {
     public:
         virtual void startRead() = 0;
         virtual void write(std::string const&) = 0;
+//        virtual std::weak_ptr<ISession> weak_from_this() = 0;
         virtual ~ISession() = default;
     };
 

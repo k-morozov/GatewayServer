@@ -77,7 +77,6 @@ namespace goodok {
 
         private:
             void writeImpl_();
-            std::weak_ptr<SocketWriter> weak_from_this() { return detail::weak_from(shared_from_this()); }
         };
     }
 
