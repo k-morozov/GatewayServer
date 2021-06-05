@@ -14,35 +14,38 @@
 #include <boost/asio/coroutine.hpp>
 
 #include <memory>
-
+#include <execution>
 
 namespace goodok {
 
     namespace detail {
-
-        struct CoroData {
-            boost::asio::coroutine coro_;
-            char bufferHeader_[3];
-            char bufferBody_[3];
-
-        };
+        using buffer_t = std::vector<uint8_t>;
 
         template <class T>
         std::weak_ptr<T> weak_from(std::shared_ptr<T> src) {
             return src;
         }
 
+        inline buffer_t convert(std::string const& message) {
+            buffer_t data(message.size());
+            std::copy(std::execution::par,
+                      std::begin(message), std::end(message),
+                      std::begin(data));
+//            log::write(log::Level::info, "convert", boost::format("size convert = %1%") % data.size());
+            return data;
+        }
+
         class SocketWriter : public std::enable_shared_from_this<SocketWriter>
         {
             using socket_t = boost::asio::ip::tcp::socket;
         public:
-            SocketWriter(std::weak_ptr<socket_t> sock);
+            explicit SocketWriter(std::weak_ptr<socket_t> sock);
             ~SocketWriter() = default;
 
             void write(std::string);
         private:
             std::weak_ptr<socket_t> socketWeak_;
-            std::list<std::string> bufferWrite_;
+            std::list<buffer_t> bufferWrite_;
             std::atomic<bool> processWrite = false;
 
         private:
@@ -67,7 +70,13 @@ namespace goodok {
         std::shared_ptr<socket_t> socket_;
         std::shared_ptr<detail::SocketWriter> writer_;
 
-        detail::CoroData coroData_;
+        struct CoroData {
+            boost::asio::coroutine coro_;
+            char bufferHeader_[3];
+            char bufferBody_[3];
+
+        };
+        CoroData coroData_;
 
     private:
         void runRead(boost::system::error_code = {}, std::size_t = 0);

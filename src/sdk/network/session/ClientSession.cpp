@@ -20,7 +20,8 @@ namespace goodok {
         void SocketWriter::write(std::string message)
         {
             processWrite = !bufferWrite_.empty();
-            bufferWrite_.push_back(message);
+            detail::buffer_t data = detail::convert(message);
+            bufferWrite_.push_back(std::move(data));
             if (!processWrite) {
                 writeImpl_();
             }
@@ -42,6 +43,8 @@ namespace goodok {
                         *socket,
                         boost::asio::buffer(bufferWrite_.front()),
                         std::move(callback));
+            } else {
+                log::write(log::Level::error, "SocketWriter", "socket is close");
             }
         }
 
@@ -52,15 +55,20 @@ namespace goodok {
         socket_(std::make_shared<socket_t>(std::move(socket))),
         writer_(std::make_shared<detail::SocketWriter>(detail::weak_from(socket_)))
     {
+        if (!socket_){
+            throw std::invalid_argument("incorrect socket");
+        }
+        if (!writer_) {
+            throw std::invalid_argument("writer_ is failed");
+        }
         log::write(log::Level::trace, "ClientSession", "ctor done");
     }
 
     ClientSession::~ClientSession()
     {
-//        if (socket_.is_open()) {
-//            socket_.close();
-//        }
-
+        if (socket_ && socket_->is_open()) {
+            socket_->close();
+        }
         log::write(log::Level::trace, "ClientSession", "dtor done");
     }
 
@@ -81,8 +89,6 @@ namespace goodok {
 
         auto task = [](std::string textHeader, std::string textBody)
         {
-//            textHeader.back() = '\0';
-//            textBody.back() = '\0';
             log::write(log::Level::debug, "ClientSession",
                        boost::format("read header: size = %1%, text=[%2%]") % textHeader.size() % textHeader);
             log::write(log::Level::debug, "ClientSession",
