@@ -19,16 +19,22 @@ namespace goodok {
     namespace Impl {
         struct CoroData {
             boost::asio::coroutine coro_;
+            boost::asio::coroutine coroWrite_;
             char bufferHeader_[3];
             char bufferBody_[3];
+            std::list<std::string> bufferWrite_;
+            std::atomic<bool> isSendNow = false;
         };
     }
 
-    class Session : public ISession {
+    class ClientSession : public ISession {
     public:
-        Session(AsyncContextWeakPtr ctxWeak, boost::asio::ip::tcp::socket &&socket);
+        ClientSession(AsyncContextWeakPtr ctxWeak, boost::asio::ip::tcp::socket &&socket);
+        ~ClientSession() override;
 
-        void start() override;
+        void startRead() override;
+        void write(std::string) override;
+
     private:
         AsyncContextWeakPtr ctx_;
         boost::asio::ip::tcp::socket socket_;
@@ -37,6 +43,7 @@ namespace goodok {
 
     private:
         void runRead(boost::system::error_code = {}, std::size_t = 0);
+        void writeImpl_(boost::system::error_code = {}, std::size_t = 0);
     };
 
 }

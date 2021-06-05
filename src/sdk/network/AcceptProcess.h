@@ -6,7 +6,7 @@
 #define GOODOK_FRONT_SERVER_NETWORK_H
 
 #include "sdk/context/AsyncContext.h"
-#include "sdk/network/session/Session.h"
+#include "sdk/network/session/ClientSession.h"
 
 #include "tools/log/Logger.h"
 
@@ -98,7 +98,7 @@ namespace goodok {
                                          std::bind(&AcceptProcess::doAccept, this, std::placeholders::_1));
             log::write(log::Level::debug, "Network", "new connection");
             sessions_.emplace_back(std::make_shared<T>(ctx_, std::move(socket_)));
-            sessions_.back()->start();
+            sessions_.back()->startRead();
             socket_.close();
         }
     }

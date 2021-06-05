@@ -18,7 +18,7 @@ namespace goodok {
                     }
                     ));
         }
-        log::write(log::Level::info, "WorkersPool", "ctor done");
+        log::write(log::Level::trace, "WorkersPool", "ctor done");
     }
 
     WorkersPool::~WorkersPool()
@@ -31,16 +31,13 @@ namespace goodok {
                 th.join();
             }
         }
-        log::write(log::Level::info,
+        log::write(log::Level::trace,
                    "WorkersPool",
                    boost::format("dtor done, counter tasks = %1%") % counter_.counter_);
     }
 
     void WorkersPool::runThread()
     {
-//        log::write(log::Level::info,
-//                   "WorkersPool",
-//                   "run new thread");
         for(;;)
         {
             try

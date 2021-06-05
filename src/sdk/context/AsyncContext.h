@@ -18,7 +18,7 @@ namespace goodok {
     using AsyncContextSPtr = std::shared_ptr<AsyncContext>;
 
     template <class Func>
-    concept ConceptIsInvokeArg = (
+    concept IsInvoke = (
             std::is_invocable<Func>::value
             );
 
@@ -43,11 +43,11 @@ namespace goodok {
         mutable std::unique_ptr<WorkersPool> workers_;
 
     private:
-        template<ConceptIsInvokeArg Task>
+        template<IsInvoke Task>
         void runAsyncImpl(Task && task) const;
     };
 
-    template<ConceptIsInvokeArg Task>
+    template<IsInvoke Task>
     void AsyncContext::runAsyncImpl(Task && task) const
     {
         if (!workers_) {

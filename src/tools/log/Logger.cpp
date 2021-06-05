@@ -22,10 +22,10 @@ namespace log {
                 keywords::file_name = "log%3N.txt",
                 keywords::rotation_size = 10 * 1024 * 1024,
                 keywords::time_based_rotation = sinks::file::rotation_at_time_point(0, 0, 0),
-                keywords::format = "%LineID%: [%TimeStamp%]<%Severity%>:\n%Message%"
+                keywords::format = "%LineID%: [%TimeStamp%]<%Severity%>: %Message%"
         );
         logging::add_console_log(std::cout, boost::log::keywords::format =
-                "%LineID%: [%TimeStamp%]<%Severity%>:\n%Message%"
+                "%LineID%: [%TimeStamp%]<%Severity%>: %Message%"
                 );
         boost::log::core::get()->set_filter(boost::log::trivial::severity >= lvl);
         logging::add_common_attributes();
