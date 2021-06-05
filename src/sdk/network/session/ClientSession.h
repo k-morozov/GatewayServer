@@ -13,12 +13,15 @@
 #include <boost/asio.hpp>
 #include <boost/asio/coroutine.hpp>
 
+#include <memory>
+
+
 namespace goodok {
 
     namespace detail {
+
         struct CoroData {
             boost::asio::coroutine coro_;
-            boost::asio::coroutine coroWrite_;
             char bufferHeader_[3];
             char bufferBody_[3];
 
@@ -28,13 +31,32 @@ namespace goodok {
         std::weak_ptr<T> weak_from(std::shared_ptr<T> src) {
             return src;
         }
+
+        class SocketWriter : public std::enable_shared_from_this<SocketWriter>
+        {
+            using socket_t = boost::asio::ip::tcp::socket;
+        public:
+            SocketWriter(std::weak_ptr<socket_t> sock);
+            ~SocketWriter() = default;
+
+            void write(std::string);
+        private:
+            std::weak_ptr<socket_t> socketWeak_;
+            std::list<std::string> bufferWrite_;
+            std::atomic<bool> processWrite = false;
+
+        private:
+            void writeImpl_();
+        };
     }
 
     class ClientSession :
             public std::enable_shared_from_this<ClientSession>,
-            public ISession {
+            public ISession
+    {
+        using socket_t = boost::asio::ip::tcp::socket;
     public:
-        ClientSession(AsyncContextWeakPtr ctxWeak, boost::asio::ip::tcp::socket &&socket);
+        ClientSession(AsyncContextWeakPtr ctxWeak, socket_t &&socket);
         ~ClientSession() override;
 
         void startRead() override;
@@ -42,16 +64,13 @@ namespace goodok {
 
     private:
         AsyncContextWeakPtr ctx_;
-        boost::asio::ip::tcp::socket socket_;
+        std::shared_ptr<socket_t> socket_;
+        std::shared_ptr<detail::SocketWriter> writer_;
 
         detail::CoroData coroData_;
 
-        std::list<std::string> bufferWrite_;
-        std::atomic<bool> processWrite = false;
-
     private:
         void runRead(boost::system::error_code = {}, std::size_t = 0);
-        void writeImpl_();
     };
 
 }

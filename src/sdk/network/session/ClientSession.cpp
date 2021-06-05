@@ -9,19 +9,57 @@
 #include <algorithm>
 
 namespace goodok {
+    namespace detail {
 
-    ClientSession::ClientSession(AsyncContextWeakPtr ctxWeak, boost::asio::ip::tcp::socket && socket) :
+        SocketWriter::SocketWriter(std::weak_ptr<socket_t> sock) :
+            socketWeak_(std::move(sock))
+        {
+            log::write(log::Level::trace, "SocketWriter", "ctor done");
+        }
+
+        void SocketWriter::write(std::string message)
+        {
+            processWrite = !bufferWrite_.empty();
+            bufferWrite_.push_back(message);
+            if (!processWrite) {
+                writeImpl_();
+            }
+        }
+
+        void SocketWriter::writeImpl_() {
+            if (auto socket = socketWeak_.lock()) {
+                auto callback = [selfWeak = detail::weak_from(shared_from_this())](boost::system::error_code,
+                                                                                   std::size_t) {
+                    log::write(log::Level::info, "SendHandler", "ok");
+                    if (auto self = selfWeak.lock()) {
+                        self->bufferWrite_.pop_front();
+                        if (!self->bufferWrite_.empty()) {
+                            self->writeImpl_();
+                        }
+                    }
+                };
+                boost::asio::async_write(
+                        *socket,
+                        boost::asio::buffer(bufferWrite_.front()),
+                        std::move(callback));
+            }
+        }
+
+    }
+
+    ClientSession::ClientSession(AsyncContextWeakPtr ctxWeak, socket_t && socket) :
         ctx_(std::move(ctxWeak)),
-        socket_(std::move(socket))
+        socket_(std::make_shared<socket_t>(std::move(socket))),
+        writer_(std::make_shared<detail::SocketWriter>(detail::weak_from(socket_)))
     {
         log::write(log::Level::trace, "ClientSession", "ctor done");
     }
 
     ClientSession::~ClientSession()
     {
-        if (socket_.is_open()) {
-            socket_.close();
-        }
+//        if (socket_.is_open()) {
+//            socket_.close();
+//        }
 
         log::write(log::Level::trace, "ClientSession", "dtor done");
     }
@@ -58,12 +96,12 @@ namespace goodok {
         reenter(coroData_.coro_) for(;;)
         {
             log::write(log::Level::debug, "ClientSession", "read header");
-            yield boost::asio::async_read(socket_,
+            yield boost::asio::async_read(*socket_,
                                           boost::asio::buffer(coroData_.bufferHeader_, 3),
                                           callback);
 
             log::write(log::Level::debug, "ClientSession", "read body");
-            yield boost::asio::async_read(socket_,
+            yield boost::asio::async_read(*socket_,
                                           boost::asio::buffer(coroData_.bufferBody_, 3),
                                           callback);
 
@@ -79,28 +117,7 @@ namespace goodok {
 
     void ClientSession::write(std::string message)
     {
-        processWrite = !bufferWrite_.empty();
-        bufferWrite_.push_back(message);
-        if (!processWrite) {
-            writeImpl_();
-        }
+        writer_->write(message);
     }
 
-    void ClientSession::writeImpl_()
-    {
-        auto callback = [selfWeak = detail::weak_from(shared_from_this())](boost::system::error_code , std::size_t ) {
-            log::write(log::Level::info, "SendHandler", "ok");
-            if (auto self = selfWeak.lock()) {
-                self->bufferWrite_.pop_front();
-                if (!self->bufferWrite_.empty()) {
-                    self->writeImpl_();
-                }
-            }
-        };
-
-        boost::asio::async_write(
-                socket_,
-                boost::asio::buffer(bufferWrite_.front()),
-                std::move(callback));
-    }
 }
