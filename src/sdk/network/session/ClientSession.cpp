@@ -93,7 +93,7 @@ namespace goodok {
             return;
         }
 
-        auto task = [](detail::buffer_t textHeader, detail::buffer_t textBody)
+        auto task = [](detail::buffer_header_t textHeader, detail::buffer_body_t textBody)
         {
             log::write(log::Level::debug, "ClientSession",
                        boost::format("read header: size = %1%, text=[%2%]")

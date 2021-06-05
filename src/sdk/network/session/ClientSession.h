@@ -20,9 +20,11 @@ namespace goodok {
 
     namespace detail {
         constexpr std::size_t MAX_SIZE_HEADER_BUFFER = 3;
-        constexpr std::size_t MAX_SIZE_BODY_BUFFER = 3;
+        constexpr std::size_t MAX_SIZE_BODY_BUFFER = 4;
 
         using buffer_t = std::vector<uint8_t>;
+        using buffer_header_t = std::array<uint8_t, MAX_SIZE_HEADER_BUFFER>;
+        using buffer_body_t = std::array<uint8_t, MAX_SIZE_BODY_BUFFER>;
 
         template <class T>
         std::weak_ptr<T> weak_from(std::shared_ptr<T> const& src) {
@@ -37,13 +39,27 @@ namespace goodok {
             return data;
         }
 
-        inline std::string convert(buffer_t const& message) {
+        inline std::string convert(buffer_header_t const& message) {
             std::string data;
             std::copy(std::execution::par,
                       std::begin(message), std::end(message),
                       std::back_inserter(data));
             return data;
         }
+
+//#define REMOVE_CONVERT_BODY
+#ifndef REMOVE_CONVERT_BODY
+        static_assert(MAX_SIZE_HEADER_BUFFER!=MAX_SIZE_BODY_BUFFER, "need define REMOVE_CONVERT_BODY");
+        inline std::string convert(buffer_body_t const& message) {
+            std::string data;
+            std::copy(std::execution::par,
+                      std::begin(message), std::end(message),
+                      std::back_inserter(data));
+            return data;
+        }
+#else
+        static_assert(MAX_SIZE_HEADER_BUFFER==MAX_SIZE_BODY_BUFFER, "need comment define REMOVE_CONVERT_BODY");
+#endif
 
         class SocketWriter : public std::enable_shared_from_this<SocketWriter>
         {
@@ -81,13 +97,13 @@ namespace goodok {
         std::shared_ptr<detail::SocketWriter> writer_;
 
         struct CoroData {
-            CoroData():
-                    bufferHeader_(detail::MAX_SIZE_HEADER_BUFFER),
-                    bufferBody_(detail::MAX_SIZE_BODY_BUFFER)
-            {}
+//            CoroData():
+//                    bufferHeader_(detail::MAX_SIZE_HEADER_BUFFER),
+//                    bufferBody_(detail::MAX_SIZE_BODY_BUFFER)
+//            {}
             boost::asio::coroutine coro_;
-            detail::buffer_t bufferHeader_;
-            detail::buffer_t bufferBody_;
+            detail::buffer_header_t bufferHeader_;
+            detail::buffer_body_t bufferBody_;
 
         };
         CoroData coroData_;
