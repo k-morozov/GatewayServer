@@ -29,7 +29,7 @@ namespace goodok {
 
         void SocketWriter::writeImpl_() {
             if (auto socket = socketWeak_.lock()) {
-                auto callback = [selfWeak = detail::weak_from(shared_from_this())](boost::system::error_code,
+                auto callback = [selfWeak = weak_from_this()](boost::system::error_code,
                                                                                    std::size_t) {
                     log::write(log::Level::info, "SendHandler", "ok");
                     if (auto self = selfWeak.lock()) {
@@ -92,7 +92,7 @@ namespace goodok {
             return;
         }
 
-        auto task = [](detail::buffer_header_t textHeader, detail::buffer_body_t textBody)
+        auto task = [](detail::buffer_header_t const& textHeader, detail::buffer_body_t const& textBody)
         {
             log::write(log::Level::debug, "ClientSession",
                        boost::format("read header: size = %1%, text=[%2%]")
@@ -102,8 +102,10 @@ namespace goodok {
                         % textBody.size() % detail::convert(textBody));
         };
 
-        auto callback = [this](boost::system::error_code ec, std::size_t nbytes) {
-            runRead(ec, nbytes);
+        auto callback = [selfWeak = weak_from_this()](boost::system::error_code ec, std::size_t nbytes) mutable {
+            if (auto self = selfWeak.lock()) {
+                self->runRead(ec, nbytes);
+            }
         };
 
         reenter(coroData_.coro_) for(;;)
