@@ -17,9 +17,9 @@ namespace goodok {
     using AsyncContextWeakPtr = std::weak_ptr<AsyncContext>;
     using AsyncContextSPtr = std::shared_ptr<AsyncContext>;
 
-    template <class ... Args>
+    template <class Func>
     concept ConceptIsInvokeArg = (
-            std::is_invocable<Args...>::value
+            std::is_invocable<Func>::value
             );
 
     class AsyncContext {
@@ -28,7 +28,7 @@ namespace goodok {
         ~AsyncContext();
 
         template<class Func, class ... Args,
-                typename std::enable_if<std::is_invocable<Func, Args...>::value>::type* = nullptr>
+                typename = typename std::enable_if<std::is_invocable<Func, Args...>::value>::type>
         static void runAsync(AsyncContextWeakPtr const& weakCtx, Func && func, Args &&... args)
         {
             if (auto ctx = weakCtx.lock())

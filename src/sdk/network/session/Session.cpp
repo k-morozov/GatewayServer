@@ -34,11 +34,14 @@ namespace goodok {
 
         auto task = [](std::string text)
         {
-            if (auto it = text.find('\n'); it != std::string::npos)
-            {
-                // @TODO erase_if?
-                text.erase(it);
-            }
+//            if (auto it = text.find('\n'); it != std::string::npos)
+//            {
+//                // @TODO erase_if?
+//                text.erase(it);
+//            }
+            std::erase_if(text, [](char ch) {
+                return ch == '\n';
+            });
             log::write(log::Level::debug, "Session", boost::format("read: size = %1%, text=[%2%]") % text.size() % text);
         };
 
@@ -60,7 +63,6 @@ namespace goodok {
                                           callback);
 
             // @TODO send new data after read
-
             AsyncContext::runAsync(ctx_, task, coroData_.bufferHeader_);
             AsyncContext::runAsync(ctx_, task, coroData_.bufferBody_);
 
