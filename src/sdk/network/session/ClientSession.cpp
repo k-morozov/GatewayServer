@@ -2,6 +2,8 @@
 // Created by focus on 31.05.2021.
 //
 
+
+
 #include "sdk/network/session/ClientSession.h"
 
 #include <boost/asio/yield.hpp>
@@ -92,14 +94,14 @@ namespace goodok {
             return;
         }
 
-        auto task = [](detail::buffer_header_t const& textHeader, detail::buffer_body_t const& textBody)
+        auto task = [](Serialize::Header const& header, Serialize::Request const& request)
         {
-            log::write(log::Level::debug, "ClientSession",
-                       boost::format("read header: size = %1%, text=[%2%]")
-                            % textHeader.size() % detail::convert(textHeader));
-            log::write(log::Level::debug, "ClientSession",
-                       boost::format("read body: size = %1%, text=[%2%]")
-                        % textBody.size() % detail::convert(textBody));
+            if (request.has_authorisation_request()) {
+                auto login = request.authorisation_request().login();
+                auto password = request.authorisation_request().password();
+                log::write(log::Level::debug, "ClientSession",
+                           boost::format("auth request: login=%1%, pass=%2%") % login % password);
+            }
         };
 
         auto callback = [selfWeak = weak_from_this()](boost::system::error_code ec, std::size_t nbytes) mutable {
@@ -116,12 +118,17 @@ namespace goodok {
                                           callback);
 
             log::write(log::Level::debug, "ClientSession", "read body");
+
+            coroData_.header.ParseFromArray(coroData_.bufferHeader_.data(), detail::MAX_SIZE_HEADER_BUFFER);
+
+            coroData_.bufferBody_.resize(coroData_.header.length());
             yield boost::asio::async_read(*socket_,
-                                          boost::asio::buffer(coroData_.bufferBody_.data(), detail::MAX_SIZE_BODY_BUFFER),
+                                          boost::asio::buffer(coroData_.bufferBody_.data(), coroData_.header.length()),
                                           callback);
+            coroData_.request.ParseFromArray(coroData_.bufferBody_.data(), coroData_.header.length());
 
 //             @TODO send new data after read
-            AsyncContext::runAsync(ctx_, task, coroData_.bufferHeader_, coroData_.bufferBody_);
+            AsyncContext::runAsync(ctx_, task, coroData_.header, coroData_.request);
 
             write("ok1\n");
             write("ok2\n");
