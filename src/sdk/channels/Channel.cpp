@@ -6,8 +6,14 @@
 
 namespace goodok {
 
-    Channel::Channel(const std::string &name) {
+    Channel::Channel(const std::string &name) : name_(name) {
 
+    }
+
+    void Channel::addUser(userPtr const& user)
+    {
+        // check: has user?
+        // add to list
     }
 
 }

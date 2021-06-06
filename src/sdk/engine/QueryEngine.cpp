@@ -10,13 +10,11 @@ namespace goodok {
     void QueryEngine::reg(sessionWeakPtr const& sessionWeak, Serialize::RegistrationRequest const& request)
     {
         std::size_t id = 0;
-
         userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
 
         if (auto it = usersData_.find(userPtr); it==usersData_.end()) {
             id = ++counterSession_;
             userPtr->setId(id);
-//            userPtr->password = request.password();
             usersData_.insert(userPtr);
             idClients_[userPtr->getId()] = userPtr;
             log::write(log::Level::info, "QueryEngine",
@@ -35,7 +33,6 @@ namespace goodok {
     void QueryEngine::auth(sessionWeakPtr const& sessionWeak, Serialize::AuthorisationRequest const& request)
     {
         std::size_t id = 0;
-
         userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
 
         // @TODO add checks for it
