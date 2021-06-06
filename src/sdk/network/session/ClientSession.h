@@ -5,8 +5,6 @@
 #ifndef GOODOK_FRONT_SERVER_SESSION_H
 #define GOODOK_FRONT_SERVER_SESSION_H
 
-#include "protocol/protocol.h"
-
 #include "log/Logger.h"
 #include "sdk/context/AsyncContext.h"
 #include "ISession.h"
@@ -65,7 +63,7 @@ namespace goodok {
             explicit SocketWriter(std::weak_ptr<socket_t> sock);
             ~SocketWriter() = default;
 
-            void write(std::string const&);
+            void write(Serialize::Response const&);
         private:
             std::weak_ptr<socket_t> socketWeak_;
             std::list<buffer_t> bufferWrite_;
@@ -86,7 +84,7 @@ namespace goodok {
         ~ClientSession() override;
 
         void startRead() override;
-        void write(std::string const&) override;
+        void write(Serialize::Response const&) override;
 
     protected:
         ClientSession(AsyncContextWeakPtr ctxWeak, socket_t &&socket);

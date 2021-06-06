@@ -19,10 +19,11 @@ namespace goodok {
             log::write(log::Level::trace, "SocketWriter", "ctor done");
         }
 
-        void SocketWriter::write(std::string const& message)
+        void SocketWriter::write(Serialize::Response const& /*message*/)
         {
             processWrite = !bufferWrite_.empty();
-            detail::buffer_t data = detail::convert(message);
+            detail::buffer_t data = MsgFactory::serialize<command::TypeCommand::AuthorisationResponse>(1);
+
             bufferWrite_.push_back(std::move(data));
             if (!processWrite) {
                 writeImpl_();
@@ -33,7 +34,7 @@ namespace goodok {
             if (auto socket = socketWeak_.lock()) {
                 auto callback = [selfWeak = weak_from_this()](boost::system::error_code,
                                                                                    std::size_t) {
-                    log::write(log::Level::info, "SendHandler", "ok");
+                    log::write(log::Level::info, "writeImpl_", "send");
                     if (auto self = selfWeak.lock()) {
                         self->bufferWrite_.pop_front();
                         if (!self->bufferWrite_.empty()) {
@@ -94,13 +95,17 @@ namespace goodok {
             return;
         }
 
-        auto task = [](Serialize::Header const& header, Serialize::Request const& request)
+        auto task = [selfWeak = weak_from_this()](Serialize::Header const& /*header*/, Serialize::Request const& request)
         {
             if (request.has_authorisation_request()) {
                 auto login = request.authorisation_request().login();
                 auto password = request.authorisation_request().password();
                 log::write(log::Level::debug, "ClientSession",
                            boost::format("auth request: login=%1%, pass=%2%") % login % password);
+                if (auto self = selfWeak.lock()) {
+                    Serialize::Response response;
+                    self->write(response);
+                }
             }
         };
 
@@ -125,19 +130,20 @@ namespace goodok {
             yield boost::asio::async_read(*socket_,
                                           boost::asio::buffer(coroData_.bufferBody_.data(), coroData_.header.length()),
                                           callback);
-            coroData_.request.ParseFromArray(coroData_.bufferBody_.data(), coroData_.header.length());
+            coroData_.request.ParseFromArray(coroData_.bufferBody_.data(),
+                                             static_cast<int>(coroData_.header.length()));
 
 //             @TODO send new data after read
             AsyncContext::runAsync(ctx_, task, coroData_.header, coroData_.request);
 
-            write("ok1\n");
-            write("ok2\n");
-            write("ok3\n");
+//            write("ok1\n");
+//            write("ok2\n");
+//            write("ok3\n");
 
         }
     }
 
-    void ClientSession::write(std::string const& message)
+    void ClientSession::write(Serialize::Response const& message)
     {
         writer_->write(message);
     }
