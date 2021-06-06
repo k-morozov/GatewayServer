@@ -7,6 +7,7 @@
 
 #include "log/Logger.h"
 #include "sdk/context/AsyncContext.h"
+#include "sdk/engine/QueryEngine.h"
 #include "ISession.h"
 
 #include <boost/asio.hpp>
@@ -63,7 +64,7 @@ namespace goodok {
             explicit SocketWriter(std::weak_ptr<socket_t> sock);
             ~SocketWriter() = default;
 
-            void write(Serialize::Response const&);
+            void write(std::vector<uint8_t> const&);
         private:
             std::weak_ptr<socket_t> socketWeak_;
             std::list<buffer_t> bufferWrite_;
@@ -84,13 +85,14 @@ namespace goodok {
         ~ClientSession() override;
 
         void startRead() override;
-        void write(Serialize::Response const&) override;
+        void write(std::vector<uint8_t> const&) override;
 
     protected:
-        ClientSession(AsyncContextWeakPtr ctxWeak, socket_t &&socket);
+        ClientSession(AsyncContextWeakPtr ctxWeak, engineWeakPtr engine, socket_t &&socket);
 
     private:
         AsyncContextWeakPtr ctx_;
+        engineWeakPtr engine_;
         std::shared_ptr<socket_t> socket_;
         std::shared_ptr<detail::SocketWriter> writer_;
 

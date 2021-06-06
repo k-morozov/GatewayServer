@@ -61,9 +61,10 @@ int main(int argc, char *argv[])
         goodok::log::configure(goodok::log::Level::debug);
 
         auto ctx = std::make_shared<goodok::AsyncContext>();
+        goodok::enginePtr engine = std::make_shared<goodok::QueryEngine>();
 
         using AcceptType = goodok::AcceptProcess<goodok::ClientSession>;
-        auto nwk = std::make_shared<MakeSharedHelper<AcceptType>>(ctx, 7777);
+        auto nwk = std::make_shared<MakeSharedHelper<AcceptType>>(ctx, engine, 7777);
 
         nwk->run();
     } catch (std::exception & ex) {

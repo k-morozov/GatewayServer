@@ -9,6 +9,7 @@
 #include "sdk/common/log/Logger.h"
 #include "sdk/context/AsyncContext.h"
 #include "sdk/network/session/ClientSession.h"
+#include "sdk/engine/QueryEngine.h"
 
 #include <boost/asio.hpp>
 #include <boost/asio/coroutine.hpp>
@@ -29,13 +30,14 @@ namespace goodok {
         ~AcceptProcess();
 
     protected:
-        explicit AcceptProcess(AsyncContextWeakPtr ctx, int port = 7777);
+        explicit AcceptProcess(AsyncContextWeakPtr ctx, engineWeakPtr engine, int port = 7777);
 
     public:
         void run();
 
     private:
         AsyncContextWeakPtr ctx_;
+        engineWeakPtr engine_;
         int port_;
 
         io_context networkContext_;
@@ -56,8 +58,9 @@ namespace goodok {
 
 
     template <ConceptSessionType T>
-    AcceptProcess<T>::AcceptProcess(AsyncContextWeakPtr ctxWeak, int port) :
+    AcceptProcess<T>::AcceptProcess(AsyncContextWeakPtr ctxWeak, engineWeakPtr engine, int port) :
             ctx_(std::move(ctxWeak)),
+            engine_(std::move(engine)),
             port_(port),
             endpoint_(tcp::v4(), port_),
             acceptor_(networkContext_, endpoint_),
@@ -100,7 +103,7 @@ namespace goodok {
             yield acceptor_.async_accept(socket_,
                                          std::bind(&AcceptProcess::doAccept, this, std::placeholders::_1));
             log::write(log::Level::debug, "Network", "new connection");
-            auto session = std::make_shared<MakeSharedHelper<T>>(ctx_, std::move(socket_));
+            auto session = std::make_shared<MakeSharedHelper<T>>(ctx_, engine_, std::move(socket_));
             sessions_.emplace_back(session);
             sessions_.back()->startRead();
             socket_.close();

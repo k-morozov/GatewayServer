@@ -11,6 +11,7 @@ file(GLOB FILES_SRC
         "network/*.cpp"
         "network/AcceptProcess.h"
         "network/session/*.cpp"
+        "engine/*.cpp"
 )
 
 add_library(${APP_NAME} STATIC ${FILES_SRC})

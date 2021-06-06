@@ -19,10 +19,10 @@ namespace goodok {
             log::write(log::Level::trace, "SocketWriter", "ctor done");
         }
 
-        void SocketWriter::write(Serialize::Response const& /*message*/)
+        void SocketWriter::write(std::vector<uint8_t> const& data/*message*/)
         {
             processWrite = !bufferWrite_.empty();
-            detail::buffer_t data = MsgFactory::serialize<command::TypeCommand::AuthorisationResponse>(1);
+//            detail::buffer_t data = MsgFactory::serialize<command::TypeCommand::AuthorisationResponse>(1);
 
             bufferWrite_.push_back(std::move(data));
             if (!processWrite) {
@@ -58,8 +58,9 @@ namespace goodok {
 
     }
 
-    ClientSession::ClientSession(AsyncContextWeakPtr ctxWeak, socket_t && socket) :
+    ClientSession::ClientSession(AsyncContextWeakPtr ctxWeak, engineWeakPtr engine, socket_t && socket) :
         ctx_(std::move(ctxWeak)),
+        engine_(std::move(engine)),
         socket_(std::make_shared<socket_t>(std::move(socket))),
         writer_(std::make_shared<detail::SocketWriter>(detail::weak_from(socket_)))
     {
@@ -137,11 +138,11 @@ namespace goodok {
         }
     }
 
-    void ClientSession::write(Serialize::Response const& message)
+    void ClientSession::write(std::vector<uint8_t> const& message)
     {
         writer_->write(message);
     }
-
+//    @TODO query?
     void ClientSession::processRequest(Serialize::Header const& header, Serialize::Request const& request)
     {
         switch (static_cast<command::TypeCommand>(header.command()))
@@ -150,8 +151,22 @@ namespace goodok {
                 log::write(log::Level::error, "processRequest", "Unknown command in header");
                 break;
             case command::TypeCommand::RegistrationRequest:
+                log::write(log::Level::info, "processRequest", "Registration request");
+                if (request.has_registration_request()) {
+                    log::write(log::Level::debug, "processRequest", boost::format("login=%1%, password=%2%")
+                                                                    % request.registration_request().login() % request.registration_request().password());
+                } else {
+                    log::write(log::Level::error, "processRequest", "RegistrationRequest: Mismatch command in header and type request in body");
+                }
+                if (auto engine = engine_.lock()) {
+                    engine->reg(weak_from_this(), request.registration_request());
+                }
                 break;
             case command::TypeCommand::RegistrationResponse:
+                log::write(log::Level::error, "processRequest", "RegistrationResponse should not come here");
+                if (auto engine = engine_.lock()) {
+                    engine->reg(weak_from_this(), request.registration_request());
+                }
                 break;
             case command::TypeCommand::AuthorisationRequest:
                 log::write(log::Level::info, "processRequest", "Authorisation request");
@@ -161,8 +176,12 @@ namespace goodok {
                 } else {
                     log::write(log::Level::error, "processRequest", "AuthorisationRequest: Mismatch command in header and type request in body");
                 }
+                if (auto engine = engine_.lock()) {
+                    engine->auth(weak_from_this(), request.authorisation_request());
+                }
                 break;
             case command::TypeCommand::AuthorisationResponse:
+                log::write(log::Level::error, "processRequest", "AuthorisationResponse should not come here");
                 break;
             case command::TypeCommand::SendTextRequest:
                 break;
