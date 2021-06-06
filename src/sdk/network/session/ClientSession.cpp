@@ -32,8 +32,8 @@ namespace goodok {
 
         void SocketWriter::writeImpl_() {
             if (auto socket = socketWeak_.lock()) {
-                auto callback = [selfWeak = weak_from_this()](boost::system::error_code,
-                                                                                   std::size_t) {
+                auto callback = [selfWeak = weak_from_this()](boost::system::error_code, std::size_t)
+                {
                     log::write(log::Level::info, "writeImpl_", "send");
                     if (auto self = selfWeak.lock()) {
                         self->bufferWrite_.pop_front();
@@ -95,19 +95,19 @@ namespace goodok {
             return;
         }
 
-        auto task = [selfWeak = weak_from_this()](Serialize::Header const& /*header*/, Serialize::Request const& request)
-        {
-            if (request.has_authorisation_request()) {
-                auto login = request.authorisation_request().login();
-                auto password = request.authorisation_request().password();
-                log::write(log::Level::debug, "ClientSession",
-                           boost::format("auth request: login=%1%, pass=%2%") % login % password);
-                if (auto self = selfWeak.lock()) {
-                    Serialize::Response response;
-                    self->write(response);
-                }
-            }
-        };
+//        auto task = [selfWeak = weak_from_this()](Serialize::Header const& /*header*/, Serialize::Request const& request)
+//        {
+//            if (request.has_authorisation_request()) {
+//                auto login = request.authorisation_request().login();
+//                auto password = request.authorisation_request().password();
+//                log::write(log::Level::debug, "ClientSession",
+//                           boost::format("auth request: login=%1%, pass=%2%") % login % password);
+//                if (auto self = selfWeak.lock()) {
+//                    Serialize::Response response;
+//                    self->write(response);
+//                }
+//            }
+//        };
 
         auto callback = [selfWeak = weak_from_this()](boost::system::error_code ec, std::size_t nbytes) mutable {
             if (auto self = selfWeak.lock()) {
@@ -133,19 +133,57 @@ namespace goodok {
             coroData_.request.ParseFromArray(coroData_.bufferBody_.data(),
                                              static_cast<int>(coroData_.header.length()));
 
-//             @TODO send new data after read
-            AsyncContext::runAsync(ctx_, task, coroData_.header, coroData_.request);
-
-//            write("ok1\n");
-//            write("ok2\n");
-//            write("ok3\n");
-
+            AsyncContext::runAsync(ctx_, &ClientSession::processRequest, this, coroData_.header, coroData_.request);
         }
     }
 
     void ClientSession::write(Serialize::Response const& message)
     {
         writer_->write(message);
+    }
+
+    void ClientSession::processRequest(Serialize::Header const& header, Serialize::Request const& request)
+    {
+        switch (static_cast<command::TypeCommand>(header.command()))
+        {
+            case command::TypeCommand::Unknown:
+                log::write(log::Level::error, "processRequest", "Unknown command in header");
+                break;
+            case command::TypeCommand::RegistrationRequest:
+                break;
+            case command::TypeCommand::RegistrationResponse:
+                break;
+            case command::TypeCommand::AuthorisationRequest:
+                log::write(log::Level::info, "processRequest", "Authorisation request");
+                if (request.has_authorisation_request()) {
+                    log::write(log::Level::debug, "processRequest", boost::format("login=%1%, password=%2%")
+                        % request.authorisation_request().login() % request.authorisation_request().password());
+                } else {
+                    log::write(log::Level::error, "processRequest", "AuthorisationRequest: Mismatch command in header and type request in body");
+                }
+                break;
+            case command::TypeCommand::AuthorisationResponse:
+                break;
+            case command::TypeCommand::SendTextRequest:
+                break;
+            case command::TypeCommand::EchoResponse:
+                break;
+            case command::TypeCommand::JoinRoomRequest:
+                break;
+            case command::TypeCommand::JoinRoomResponse:
+                break;
+            case command::TypeCommand::HistoryRequest:
+                break;
+            case command::TypeCommand::HistoryResponse:
+                break;
+            case command::TypeCommand::ChannelsRequest:
+                break;
+            case command::TypeCommand::ChannelsResponse:
+                break;
+            default:
+                log::write(log::Level::error, "processRequest", "Failed command in header");
+                break;
+        }
     }
 
 }

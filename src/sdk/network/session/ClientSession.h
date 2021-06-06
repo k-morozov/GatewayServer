@@ -105,6 +105,8 @@ namespace goodok {
 
     private:
         void runRead(boost::system::error_code = {}, std::size_t = 0);
+
+        void processRequest(Serialize::Header const& header, Serialize::Request const& request);
     };
 
 }
