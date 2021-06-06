@@ -8,32 +8,12 @@
 #include <protocol/protocol.h>
 
 #include "sdk/network/session/ISession.h"
+#include "sdk/channels/users/IUser.h"
 #include "sdk/common/log/Logger.h"
 
 #include <unordered_set>
 
 namespace goodok {
-
-    namespace detail {
-        struct UserImpl {
-            sessionWeakPtr session;
-            std::string login;
-            std::string password;
-            std::size_t id;
-        };
-
-        struct UserHash {
-            std::size_t operator()(std::shared_ptr<UserImpl> const& user) const {
-                return std::hash<std::string>{}(user->login);
-            }
-        };
-
-        struct UserEqual {
-            bool operator()(std::shared_ptr<UserImpl> const& lhs, std::shared_ptr<UserImpl> const& rhs) const {
-                return lhs->login == rhs->login;
-            }
-        };
-    }
 
     class QueryEngine;
     using enginePtr = std::shared_ptr<QueryEngine>;
@@ -52,7 +32,8 @@ namespace goodok {
         // @TODO boost::uid?
         std::atomic<std::size_t> counterSession_ = 0;
 
-        std::unordered_set<std::shared_ptr<detail::UserImpl>, detail::UserHash, detail::UserEqual> usersData_;
+        std::unordered_set<userPtr, IUserHash, IUserEqual> usersData_;
+        std::unordered_map<std::size_t, userPtr> idClients_;
     };
 }
 

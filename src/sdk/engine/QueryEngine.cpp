@@ -3,6 +3,7 @@
 //
 
 #include "QueryEngine.h"
+#include "sdk/channels/users/User.h"
 
 namespace goodok {
 
@@ -10,23 +11,19 @@ namespace goodok {
     {
         std::size_t id = 0;
 
-        auto userPtr = std::make_shared<detail::UserImpl>(detail::UserImpl{
-                .session=sessionWeak,
-                .login=request.login(),
-                .password="",
-                .id=0
-        });
+        userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
 
         if (auto it = usersData_.find(userPtr); it==usersData_.end()) {
             id = ++counterSession_;
-            userPtr->id = id;
-            userPtr->password = request.password();
+            userPtr->setId(id);
+//            userPtr->password = request.password();
             usersData_.insert(userPtr);
+            idClients_[userPtr->getId()] = userPtr;
             log::write(log::Level::info, "QueryEngine",
-                       boost::format("registration new user. login=%1%, id=%2%") % userPtr->login % userPtr->id);
+                       boost::format("registration new user. login=%1%, id=%2%") % userPtr->getName() % userPtr->getId());
         } else {
             log::write(log::Level::warning, "QueryEngine",
-                       boost::format("registration failed. user=%1% contains yet.") % userPtr->login);
+                       boost::format("registration failed. user=%1% contains yet.") % userPtr->getName());
         }
 
         if (auto session = sessionWeak.lock()) {
@@ -39,20 +36,15 @@ namespace goodok {
     {
         std::size_t id = 0;
 
-        auto userPtr = std::make_shared<detail::UserImpl>(detail::UserImpl{
-                .session=sessionWeak,
-                .login=request.login(),
-                .password=request.password(),
-                .id=0
-        });
+        userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
 
         // @TODO add checks for it
         if (auto it = usersData_.find(userPtr); it!=usersData_.end()) {
-            if ((*it)->password == request.password()) {
+            if ((*it)->getPassword() == request.password()) {
                 log::write(log::Level::info, "QueryEngine",
                            boost::format("authorisation user. login=%1%, id=%2%")
-                           % request.login() % (*it)->id);
-                id = (*it)->id;
+                           % request.login() % (*it)->getId());
+                id = (*it)->getId();
             } else {
                 log::write(log::Level::warning, "QueryEngine",
                            boost::format("wrong password. login=%1%") % request.login());
@@ -72,7 +64,10 @@ namespace goodok {
 
     void QueryEngine::joinRoom(sessionWeakPtr const& session, Serialize::JoinRoomRequest const& request)
     {
-
+        /*
+         * 1. id channels in engine
+         * 2. class Channels
+         */
     }
 }
 
