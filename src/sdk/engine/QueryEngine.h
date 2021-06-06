@@ -23,14 +23,14 @@ namespace goodok {
         };
 
         struct UserHash {
-            std::size_t operator()(UserImpl const& user) const {
-                return std::hash<std::string>{}(user.login);
+            std::size_t operator()(std::shared_ptr<UserImpl> const& user) const {
+                return std::hash<std::string>{}(user->login);
             }
         };
 
         struct UserEqual {
-            bool operator()(UserImpl const& lhs, UserImpl const& rhs) const {
-                return lhs.login == rhs.login;
+            bool operator()(std::shared_ptr<UserImpl> const& lhs, std::shared_ptr<UserImpl> const& rhs) const {
+                return lhs->login == rhs->login;
             }
         };
     }
@@ -52,7 +52,7 @@ namespace goodok {
         // @TODO boost::uid?
         std::atomic<std::size_t> counterSession_ = 0;
 
-        std::unordered_set<detail::UserImpl, detail::UserHash, detail::UserEqual> usersData_;
+        std::unordered_set<std::shared_ptr<detail::UserImpl>, detail::UserHash, detail::UserEqual> usersData_;
     };
 }
 
