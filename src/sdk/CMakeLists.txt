@@ -5,7 +5,7 @@ project(sdk-goodok)
 set(APP_NAME sdk-goodok)
 
 file(GLOB FILES_SRC
-        "${CMAKE_SOURCE_DIR}/src/tools/log/Logger.cpp"
+        "common/log/*.cpp"
         "common/*.h"
         "context/*.cpp"
         "network/*.cpp"
@@ -24,7 +24,7 @@ set_target_properties(${APP_NAME} PROPERTIES
 
 target_include_directories(${APP_NAME}
         PUBLIC
-            "src/tools/log/"
+            "common/"
             "context/"
             "network/"
         PRIVATE

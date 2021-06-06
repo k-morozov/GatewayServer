@@ -6,7 +6,7 @@ set(APP_NAME gateway-server)
 
 set(FILES_SRC
         "main.cpp"
-        "${CMAKE_SOURCE_DIR}/src/tools/log/Logger.cpp"
+        "${CMAKE_SOURCE_DIR}/src/sdk/common/log/Logger.cpp"
 )
 
 add_executable(${APP_NAME} ${FILES_SRC})

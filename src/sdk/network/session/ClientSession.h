@@ -5,7 +5,7 @@
 #ifndef GOODOK_FRONT_SERVER_SESSION_H
 #define GOODOK_FRONT_SERVER_SESSION_H
 
-#include "tools/log/Logger.h"
+#include "log/Logger.h"
 
 #include "sdk/context/AsyncContext.h"
 #include "ISession.h"
