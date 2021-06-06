@@ -63,6 +63,11 @@ namespace goodok {
         }
 
     }
+
+    void QueryEngine::joinRoom(sessionWeakPtr const& session, Serialize::JoinRoomRequest const& request)
+    {
+
+    }
 }
 
 #include "QueryEngine.h"

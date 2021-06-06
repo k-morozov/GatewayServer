@@ -44,8 +44,10 @@ namespace goodok {
         QueryEngine() = default;
         ~QueryEngine() = default;
 
+    public:
         void reg(sessionWeakPtr const& session, Serialize::RegistrationRequest const& request);
         void auth(sessionWeakPtr const& session, Serialize::AuthorisationRequest const& request);
+        void joinRoom(sessionWeakPtr const& session, Serialize::JoinRoomRequest const& request);
     private:
         // @TODO boost::uid?
         std::atomic<std::size_t> counterSession_ = 0;

@@ -155,11 +155,14 @@ namespace goodok {
                 if (request.has_registration_request()) {
                     log::write(log::Level::debug, "processRequest", boost::format("login=%1%, password=%2%")
                                                                     % request.registration_request().login() % request.registration_request().password());
+                    if (auto engine = engine_.lock()) {
+                        engine->reg(weak_from_this(), request.registration_request());
+                    }
                 } else {
+                    // @TODO notification user?
                     log::write(log::Level::error, "processRequest", "RegistrationRequest: Mismatch command in header and type request in body");
-                }
-                if (auto engine = engine_.lock()) {
-                    engine->reg(weak_from_this(), request.registration_request());
+                    auto buffer = MsgFactory::serialize<command::TypeCommand::RegistrationResponse>(0);
+                    write(buffer);
                 }
                 break;
             case command::TypeCommand::RegistrationResponse:
@@ -173,29 +176,49 @@ namespace goodok {
                 if (request.has_authorisation_request()) {
                     log::write(log::Level::debug, "processRequest", boost::format("login=%1%, password=%2%")
                         % request.authorisation_request().login() % request.authorisation_request().password());
+                    if (auto engine = engine_.lock()) {
+                        engine->auth(weak_from_this(), request.authorisation_request());
+                    }
                 } else {
+                    // @TODO notification user?
                     log::write(log::Level::error, "processRequest", "AuthorisationRequest: Mismatch command in header and type request in body");
-                }
-                if (auto engine = engine_.lock()) {
-                    engine->auth(weak_from_this(), request.authorisation_request());
+                    auto buffer = MsgFactory::serialize<command::TypeCommand::AuthorisationResponse>(0);
+                    write(buffer);
                 }
                 break;
             case command::TypeCommand::AuthorisationResponse:
                 log::write(log::Level::error, "processRequest", "AuthorisationResponse should not come here");
                 break;
             case command::TypeCommand::SendTextRequest:
+                log::write(log::Level::info, "processRequest", "SendText request");
                 break;
             case command::TypeCommand::EchoResponse:
                 break;
             case command::TypeCommand::JoinRoomRequest:
+                log::write(log::Level::info, "processRequest", "JoinRoom request");
+                if(request.has_join_room_request()) {
+                    log::write(log::Level::debug, "processRequest",
+                               boost::format("client_id=%1%, channel_name=%2%")
+                               % request.join_room_request().client_id() % request.join_room_request().channel_name());
+                    if (auto engine = engine_.lock()) {
+                        engine->joinRoom(weak_from_this(), request.join_room_request());
+                    }
+                } else {
+                    log::write(log::Level::error, "processRequest", "JoinRoomRequest: Mismatch command in header and type request in body");
+                    auto buffer = MsgFactory::serialize<command::TypeCommand::JoinRoomResponse>("", false);
+                    write(buffer);
+                }
                 break;
             case command::TypeCommand::JoinRoomResponse:
+                log::write(log::Level::error, "processRequest", "JoinRoomResponse should not come here");
                 break;
             case command::TypeCommand::HistoryRequest:
+                log::write(log::Level::info, "processRequest", "History request");
                 break;
             case command::TypeCommand::HistoryResponse:
                 break;
             case command::TypeCommand::ChannelsRequest:
+                log::write(log::Level::info, "processRequest", "Channels request");
                 break;
             case command::TypeCommand::ChannelsResponse:
                 break;
