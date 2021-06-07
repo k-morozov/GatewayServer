@@ -4,16 +4,40 @@
 
 #include "Channel.h"
 
+#include "log/Logger.h"
+
 namespace goodok {
 
-    Channel::Channel(const std::string &name) : name_(name) {
-
+    Channel::Channel(std::string const& name, std::size_t id) :
+        name_(name),
+        id_(id)
+    {
+        if (name_.empty()) {
+            throw std::invalid_argument("Channel: empty name");
+        }
+        if (id == 0) {
+            throw std::invalid_argument("Channel: id equal zero");
+        }
     }
 
     void Channel::addUser(userPtr const& user)
     {
-        // check: has user?
-        // add to list
+        if (!user) {
+            log::write(log::Level::error, "Channel", "addUser: user is nullptr");
+            return;
+        }
+        if (std::find(std::begin(users_), std::end(users_),
+                      user) == users_.end())
+        {
+            users_.push_back(user);
+            if (auto session = user->getSession().lock()) {
+                auto buffer = MsgFactory::serialize<command::TypeCommand::JoinRoomResponse>(name_, true);
+                session->write(buffer);
+            }
+        } else {
+            log::write(log::Level::error, "Channel",
+                       boost::format("channel=%1% has user=%2% yet.") % name_ % user->getName());
+        }
     }
 
 }

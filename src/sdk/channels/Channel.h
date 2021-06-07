@@ -12,9 +12,13 @@
 
 namespace goodok {
 
+    class Channel;
+    using channelPtr = std::shared_ptr<Channel>;
+
+
     class Channel {
     public:
-        Channel(std::string const& name);
+        Channel(std::string const& name, std::size_t id);
 
         std::size_t getId() const { return id_; }
         std::string getName() const { return name_; }
@@ -26,6 +30,7 @@ namespace goodok {
         std::size_t id_; // @TODO who generate?
         std::string name_;
 
+//        @TODO weak? list?
         std::list<userPtr> users_;
         std::list<std::string> history_;
     };

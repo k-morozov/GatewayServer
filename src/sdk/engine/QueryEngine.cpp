@@ -13,7 +13,7 @@ namespace goodok {
         userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
 
         if (auto it = usersData_.find(userPtr); it==usersData_.end()) {
-            id = ++counterSession_;
+            id = ++counterId_;
             userPtr->setId(id);
             usersData_.insert(userPtr);
             idClients_[userPtr->getId()] = userPtr;
@@ -61,10 +61,26 @@ namespace goodok {
 
     void QueryEngine::joinRoom(sessionWeakPtr const& session, Serialize::JoinRoomRequest const& request)
     {
-        /*
-         * 1. id channels in engine
-         * 2. class Channels
-         */
+        if (!nameChannels_.contains(request.channel_name())) {
+            std::size_t id = ++counterId_;
+            nameChannels_.insert({request.channel_name(), std::make_shared<Channel>(request.channel_name(), id)});
+        }
+
+        if (auto it_channel = nameChannels_.find(request.channel_name()); it_channel!=nameChannels_.end()) {
+            std::size_t idClient = request.client_id();
+            if (auto it_id_client = idClients_.find(idClient); it_id_client != idClients_.end()) {
+                if (it_channel->second) {
+                    it_channel->second->addUser(it_id_client->second);
+                }
+            } else {
+                log::write(log::Level::error, "QueryEngine",
+                           boost::format("failed joinRoom. do not fine client_id=%1% in engine") % request.client_id());
+            }
+        } else {
+            log::write(log::Level::error, "QueryEngine",
+                       boost::format("failed joinRoom. channel_name=%1%") % request.channel_name());
+        }
+
     }
 }
 

@@ -9,6 +9,7 @@
 
 #include "sdk/network/session/ISession.h"
 #include "sdk/channels/users/IUser.h"
+#include "sdk/channels/Channel.h"
 #include "sdk/common/log/Logger.h"
 
 #include <unordered_set>
@@ -19,6 +20,9 @@ namespace goodok {
     using enginePtr = std::shared_ptr<QueryEngine>;
     using engineWeakPtr = std::weak_ptr<QueryEngine>;
 
+    /** @TODO
+     * notification user(response) only one time + error checkers
+     */
     class QueryEngine {
     public:
         QueryEngine() = default;
@@ -30,10 +34,12 @@ namespace goodok {
         void joinRoom(sessionWeakPtr const& session, Serialize::JoinRoomRequest const& request);
     private:
         // @TODO boost::uid?
-        std::atomic<std::size_t> counterSession_ = 0;
+        std::atomic<std::size_t> counterId_ = 0;
 
         std::unordered_set<userPtr, IUserHash, IUserEqual> usersData_;
         std::unordered_map<std::size_t, userPtr> idClients_;
+
+        std::unordered_map<std::string, channelPtr> nameChannels_;
     };
 }
 
