@@ -212,9 +212,31 @@ namespace goodok {
             case command::TypeCommand::JoinRoomResponse:
                 log::write(log::Level::error, "processRequest", "JoinRoomResponse should not come here");
                 break;
-            case command::TypeCommand::HistoryRequest:
+            case command::TypeCommand::HistoryRequest: {
+                // @TODO implement in future
                 log::write(log::Level::info, "processRequest", "History request");
+                std::deque<command::msg_text_t> messages;
+                command::ClientTextMsg message{
+                        .author="test author",
+                        .text="no text in channel",
+                        .channel_name="no channel name",
+                        .dt={}
+                };
+                messages.push_back(message);
+
+                if (request.has_history_request()) {
+                    auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(
+                            request.history_request().channel_name(), messages);
+                    write(buffer);
+                } else {
+                    log::write(log::Level::error, "processRequest",
+                               "HistoryRequest: Mismatch command in header and type request in body");
+                    auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(
+                            request.history_request().channel_name(), messages);
+                    write(buffer);
+                }
                 break;
+            }
             case command::TypeCommand::HistoryResponse:
                 break;
             case command::TypeCommand::ChannelsRequest:
