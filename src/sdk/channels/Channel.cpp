@@ -26,17 +26,15 @@ namespace goodok {
             log::write(log::Level::error, "Channel", "addUser: user is nullptr");
             return;
         }
-        if (std::find(std::begin(users_), std::end(users_),
-                      user) == users_.end())
+        if (auto it = std::find(std::begin(users_), std::end(users_),user); it == users_.end())
         {
             users_.push_back(user);
-            if (auto session = user->getSession().lock()) {
-                auto buffer = MsgFactory::serialize<command::TypeCommand::JoinRoomResponse>(name_, true);
-                session->write(buffer);
-            }
         } else {
-            log::write(log::Level::error, "Channel",
-                       boost::format("channel=%1% has user=%2% yet.") % name_ % user->getName());
+            log::write(log::Level::error, "Channel", "update session for user in channel");
+        }
+        if (auto session = user->getSession().lock()) {
+            auto buffer = MsgFactory::serialize<command::TypeCommand::JoinRoomResponse>(name_, true);
+            session->write(buffer);
         }
     }
 

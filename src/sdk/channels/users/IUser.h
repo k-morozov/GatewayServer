@@ -16,6 +16,7 @@ namespace goodok {
 
     class IUser {
     public:
+        virtual void updateSession(sessionWeakPtr) = 0;
         virtual sessionWeakPtr getSession() const = 0;
         virtual std::string getName() const = 0;
         virtual std::string getPassword() const = 0;

@@ -27,8 +27,8 @@ namespace goodok {
 
         ~Channel() = default;
     private:
-        std::size_t id_; // @TODO who generate?
         std::string name_;
+        std::size_t id_; // @TODO who generate?
 
 //        @TODO weak? list?
         std::list<userPtr> users_;

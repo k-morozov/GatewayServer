@@ -191,6 +191,15 @@ namespace goodok {
                 break;
             case command::TypeCommand::SendTextRequest:
                 log::write(log::Level::info, "processRequest", "SendText request");
+                if (request.has_text_request()) {
+                    log::write(log::Level::debug, "processRequest",
+                               boost::format("login=%1%, channel_name=%2%, room_id=%3%. text=%4%")
+                        % request.text_request().login() % request.text_request().channel_name() % request.text_request().room_id() % request.text_request().text());
+                } else {
+                    log::write(log::Level::error, "processRequest", "SendTextRequest: Mismatch command in header and type request in body");
+//                    auto buffer = MsgFactory::serialize<command::TypeCommand::SendTextRequest>("", false);
+//                    write(buffer);
+                }
                 break;
             case command::TypeCommand::EchoResponse:
                 break;

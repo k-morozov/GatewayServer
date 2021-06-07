@@ -38,6 +38,7 @@ namespace goodok {
         // @TODO add checks for it
         if (auto it = usersData_.find(userPtr); it!=usersData_.end()) {
             if ((*it)->getPassword() == request.password()) {
+                (*it)->updateSession(sessionWeak);
                 log::write(log::Level::info, "QueryEngine",
                            boost::format("authorisation user. login=%1%, id=%2%")
                            % request.login() % (*it)->getId());

@@ -12,6 +12,7 @@ namespace goodok {
     public:
         User(sessionWeakPtr const& sessionWeak, std::string const& name, std::string const& password);
 
+        void updateSession(sessionWeakPtr session) override { session_ = session; }
         sessionWeakPtr getSession() const override { return session_; }
         std::string getName() const override { return login_; }
         std::string getPassword() const override { return password_; }
