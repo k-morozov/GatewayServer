@@ -25,6 +25,10 @@ namespace log {
 
     void write(boost::log::trivial::severity_level lvl, std::string const& location, boost::format const& text);
 
+    void write(boost::log::trivial::severity_level lvl, boost::format const& location, boost::format const& text);
+
+    void write(boost::log::trivial::severity_level lvl, boost::format const& location,std::string const& text);
+
 
 } // end namespace log
 } // end namespace goodok

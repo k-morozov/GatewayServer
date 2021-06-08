@@ -195,6 +195,9 @@ namespace goodok {
                     log::write(log::Level::debug, "processRequest",
                                boost::format("login=%1%, channel_name=%2%, room_id=%3%. text=%4%")
                         % request.text_request().login() % request.text_request().channel_name() % request.text_request().room_id() % request.text_request().text());
+                    if (auto engine = engine_.lock()) {
+                        engine->sendText(weak_from_this(), request.text_request());
+                    }
                 } else {
                     log::write(log::Level::error, "processRequest", "SendTextRequest: Mismatch command in header and type request in body");
 //                    auto buffer = MsgFactory::serialize<command::TypeCommand::SendTextRequest>("", false);
@@ -222,29 +225,15 @@ namespace goodok {
                 log::write(log::Level::error, "processRequest", "JoinRoomResponse should not come here");
                 break;
             case command::TypeCommand::HistoryRequest: {
-                // @TODO implement in future
                 log::write(log::Level::info, "processRequest", "History request");
-                std::deque<command::msg_text_t> messages;
-                command::ClientTextMsg message{
-                        .author="test author",
-                        .text="no text in channel",
-                        .channel_name="no channel name",
-                        .dt={}
-                };
-                messages.push_back(message);
 
                 if (request.has_history_request()) {
-                    log::write(log::Level::error, "processRequest",
-                               "generate fake response for HistoryRequest");
-                    auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(
-                            request.history_request().channel_name(), messages);
-                    write(buffer);
+                    if (auto engine = engine_.lock()) {
+                        engine->getHistory(request.history_request());
+                    }
                 } else {
                     log::write(log::Level::error, "processRequest",
                                "HistoryRequest: Mismatch command in header and type request in body");
-                    auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(
-                            request.history_request().channel_name(), messages);
-                    write(buffer);
                 }
                 break;
             }

@@ -60,7 +60,23 @@ namespace goodok {
 
     }
 
-    void QueryEngine::joinRoom(sessionWeakPtr const& session, Serialize::JoinRoomRequest const& request)
+    void QueryEngine::getHistory(Serialize::HistoryRequest const& request)
+    {
+        auto it_channel = nameChannels_.find(request.channel_name());
+        if (it_channel != nameChannels_.end()) {
+            if (it_channel->second) {
+                it_channel->second->sendHistory(request.client_id());
+            } else {
+                log::write(log::Level::error, "QueryEngine",
+                           boost::format("ptr to channel=%1% failed") % request.channel_name());
+            }
+        } else {
+            log::write(log::Level::error, "QueryEngine",
+                       boost::format("channel=%1% does not create yet.") % request.channel_name());
+        }
+    }
+
+    void QueryEngine::joinRoom(sessionWeakPtr const& /*session*/, Serialize::JoinRoomRequest const& request)
     {
         if (!nameChannels_.contains(request.channel_name())) {
             std::size_t id = ++counterId_;
@@ -86,6 +102,30 @@ namespace goodok {
                        boost::format("failed joinRoom. channel_name=%1%") % request.channel_name());
         }
 
+    }
+
+    void QueryEngine::sendText(sessionWeakPtr const& /*session*/, Serialize::TextRequest const& request)
+    {
+//        msg_text_t
+        command::ClientTextMsg message{
+                .author=request.login(),
+                .text=request.text(),
+                .channel_name=request.channel_name(),
+                .dt={} //request.datetime()
+        };
+
+        auto it_channel = nameChannels_.find(request.channel_name());
+        if (it_channel != nameChannels_.end()) {
+            if (it_channel->second) {
+                it_channel->second->write(message);
+            } else {
+                log::write(log::Level::error, "QueryEngine",
+                           boost::format("ptr to channel=%1% failed") % request.channel_name());
+            }
+        } else {
+            log::write(log::Level::error, "QueryEngine",
+                       boost::format("channel=%1% does not create yet.") % request.channel_name());
+        }
     }
 }
 

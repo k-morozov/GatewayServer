@@ -36,6 +36,16 @@ namespace log {
         write(lvl, location, text.str());
     }
 
+    void write(boost::log::trivial::severity_level lvl, boost::format const& location, boost::format const& text)
+    {
+        write(lvl, location.str(), text.str());
+    }
+
+    void write(boost::log::trivial::severity_level lvl, boost::format const& location, std::string const& text)
+    {
+        write(lvl, location.str(), text);
+    }
+
     void write(boost::log::trivial::severity_level lvl, std::string const& location, std::string const& text)
     {
         using level = boost::log::trivial::severity_level;

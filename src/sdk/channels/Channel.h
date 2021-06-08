@@ -24,6 +24,8 @@ namespace goodok {
         std::string getName() const { return name_; }
 
         void addUser(userPtr const& user);
+        void sendHistory(std::size_t id);
+        void write(command::ClientTextMsg const&);
 
         ~Channel() = default;
     private:
@@ -32,7 +34,8 @@ namespace goodok {
 
 //        @TODO weak? list?
         std::list<userPtr> users_;
-        std::list<std::string> history_;
+        std::unordered_map<std::size_t, userPtr> idUsers_;
+        std::deque<command::ClientTextMsg> history_;
     };
 
 }

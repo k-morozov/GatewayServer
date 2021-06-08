@@ -31,7 +31,9 @@ namespace goodok {
     public:
         void reg(sessionWeakPtr const& session, Serialize::RegistrationRequest const& request);
         void auth(sessionWeakPtr const& session, Serialize::AuthorisationRequest const& request);
+        void getHistory(Serialize::HistoryRequest const& request);
         void joinRoom(sessionWeakPtr const& session, Serialize::JoinRoomRequest const& request);
+        void sendText(sessionWeakPtr const& session, Serialize::TextRequest const& request);
     private:
         // @TODO boost::uid?
         std::atomic<std::size_t> counterId_ = 0;
