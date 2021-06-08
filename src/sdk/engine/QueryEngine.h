@@ -32,6 +32,7 @@ namespace goodok {
         void reg(sessionWeakPtr const& session, Serialize::RegistrationRequest const& request);
         void auth(sessionWeakPtr const& session, Serialize::AuthorisationRequest const& request);
         void getHistory(Serialize::HistoryRequest const& request);
+        void getChannels(Serialize::ChannelsRequest const& request);
         void joinRoom(sessionWeakPtr const& session, Serialize::JoinRoomRequest const& request);
         void sendText(sessionWeakPtr const& session, Serialize::TextRequest const& request);
     private:
@@ -41,6 +42,7 @@ namespace goodok {
         std::unordered_set<userPtr, IUserHash, IUserEqual> usersData_;
         std::unordered_map<std::size_t, userPtr> idClients_;
 
+        std::unordered_map<std::size_t, std::deque<std::string>> clientChannels_;
         std::unordered_map<std::string, channelPtr> nameChannels_;
     };
 }

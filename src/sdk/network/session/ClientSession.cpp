@@ -241,6 +241,14 @@ namespace goodok {
                 break;
             case command::TypeCommand::ChannelsRequest:
                 log::write(log::Level::info, "processRequest", "Channels request");
+                if (request.has_channels_request()) {
+                    if (auto engine = engine_.lock()) {
+                        engine->getChannels(request.channels_request());
+                    }
+                } else {
+                    log::write(log::Level::error, "processRequest",
+                               "HistoryRequest: Mismatch command in header and type request in body");
+                }
                 break;
             case command::TypeCommand::ChannelsResponse:
                 break;

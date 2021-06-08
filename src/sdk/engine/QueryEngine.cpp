@@ -76,6 +76,24 @@ namespace goodok {
         }
     }
 
+    void QueryEngine::getChannels(Serialize::ChannelsRequest const& request)
+    {
+        if (clientChannels_.contains(request.client_id())) {
+            if (auto it_user = idClients_.find(request.client_id()); it_user != idClients_.end()) {
+                if (it_user->second) {
+                    if (auto session = it_user->second->getSession().lock()) {
+                        const auto& channels = clientChannels_[request.client_id()];
+                        auto buffer = MsgFactory::serialize<command::TypeCommand::ChannelsResponse>(channels);
+                        session->write(buffer);
+                    }
+                }
+            }
+        } else {
+            log::write(log::Level::error, "QueryEngine",
+                       boost::format("user=%1% have not channels") % request.client_id());
+        }
+    }
+
     void QueryEngine::joinRoom(sessionWeakPtr const& /*session*/, Serialize::JoinRoomRequest const& request)
     {
         if (!nameChannels_.contains(request.channel_name())) {
@@ -92,6 +110,7 @@ namespace goodok {
                     log::write(log::Level::info, "QueryEngine",
                                boost::format("add new user=%1% to channel=%2%") % it_id_client->second->getName() % it_channel->second->getName());
                     it_channel->second->addUser(it_id_client->second);
+                    clientChannels_[it_id_client->second->getId()].push_back(request.channel_name());
                 }
             } else {
                 log::write(log::Level::error, "QueryEngine",
