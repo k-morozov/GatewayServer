@@ -5,9 +5,10 @@
 #ifndef GOODOK_FRONT_SERVER_ASYNCCONTEXT_H
 #define GOODOK_FRONT_SERVER_ASYNCCONTEXT_H
 
-#include "tools/log/Logger.h"
+#include "sdk/common/log/Logger.h"
 #include "WorkersPool.h"
 
+#include <concepts>
 #include <memory>
 
 namespace goodok {
@@ -16,24 +17,38 @@ namespace goodok {
     using AsyncContextWeakPtr = std::weak_ptr<AsyncContext>;
     using AsyncContextSPtr = std::shared_ptr<AsyncContext>;
 
+    template <class Func>
+    concept IsInvoke = (
+            std::is_invocable<Func>::value
+            );
 
     class AsyncContext {
     public:
         AsyncContext();
         ~AsyncContext();
 
-        template<class Function, class ... Args>
-        static void runAsync(AsyncContextWeakPtr const& weakCtx, Function && func,  Args &&... args);
+        template<class Func, class ... Args,
+                typename = typename std::enable_if<std::is_invocable<Func, Args...>::value>::type>
+        static void runAsync(AsyncContextWeakPtr const& weakCtx, Func && func, Args &&... args)
+        {
+            if (auto ctx = weakCtx.lock())
+            {
+                ctx->runAsyncImpl(std::bind(
+                        std::forward<Func>(func),
+                        std::forward<Args>(args)...));
+            }
+        }
+
     private:
         mutable std::unique_ptr<WorkersPool> workers_;
 
     private:
-        template<class Task>
-        void runAsync(Task &&task) const;
+        template<IsInvoke Task>
+        void runAsyncImpl(Task && task) const;
     };
 
-    template<class Task>
-    void AsyncContext::runAsync(Task &&task) const
+    template<IsInvoke Task>
+    void AsyncContext::runAsyncImpl(Task && task) const
     {
         if (!workers_) {
             log::write(log::Level::error,
@@ -45,12 +60,15 @@ namespace goodok {
         workers_->post(std::forward<Task>(task));
     }
 
-    template<class Function, class... Args>
-    void AsyncContext::runAsync(AsyncContextWeakPtr const& weakCtx, Function &&func, Args &&... args)
-    {
-        if (auto ctx = weakCtx.lock()) {
-            ctx->runAsync(std::bind(std::forward<Function>(func), std::forward<Args>(args)...));
-        }
-    }
+//    template<class Func, class ... Args>
+//    void AsyncContext::runAsync(AsyncContextWeakPtr const& weakCtx, Func && func, Args &&... args)
+//    {
+//        if (auto ctx = weakCtx.lock()) {
+//            ctx->runAsyncImpl(std::bind(
+//                    std::forward<Func>(func),
+//                    std::forward<Args>(args)...))
+//            ;
+//        }
+//    }
 }
 #endif //GOODOK_FRONT_SERVER_ASYNCCONTEXT_H

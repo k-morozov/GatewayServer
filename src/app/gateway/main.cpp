@@ -5,10 +5,11 @@
 
 #include <protocol/protocol.h>
 
-#include "tools/log/Logger.h"
+#include "sdk/common/log/Logger.h"
+#include "sdk/common/MakeSharedHelper.h"
 #include "sdk/context/AsyncContext.h"
 #include "sdk/network/AcceptProcess.h"
-#include "sdk/network/Session.h"
+#include "sdk/network/session/ClientSession.h"
 
 #include <boost/program_options.hpp>
 
@@ -53,23 +54,21 @@ Params setParameters(int argc, char** argv) {
     return params;
 }
 
-class SessionTest {
-public:
-    SessionTest(goodok::AsyncContextWeakPtr , boost::asio::ip::tcp::socket &&) {
-        std::cout << "Fake Session ctor" << std::endl;
-    }
-
-    void start() {}
-};
 int main(int argc, char *argv[])
 {
-    auto params = setParameters(argc, argv);
-    goodok::log::configure(goodok::log::Level::debug);
+    try {
+        auto params = setParameters(argc, argv);
+        goodok::log::configure(goodok::log::Level::debug);
 
-    goodok::log::write(goodok::log::Level::info, "main", std::to_string(__cplusplus));
-    auto ctx = std::make_shared<goodok::AsyncContext>();
-    auto nwk = std::make_shared<goodok::AcceptProcess<goodok::Session>>(ctx, 7777);
-//    auto nwk = std::make_shared<goodok::AcceptProcess<SessionTest>>(ctx, 7777);
+        auto ctx = std::make_shared<goodok::AsyncContext>();
+        goodok::enginePtr engine = std::make_shared<goodok::QueryEngine>();
 
-    nwk->run();
+        using AcceptType = goodok::AcceptProcess<goodok::ClientSession>;
+        auto nwk = std::make_shared<MakeSharedHelper<AcceptType>>(ctx, engine, 7777);
+
+        nwk->run();
+    } catch (std::exception & ex) {
+        goodok::log::write(goodok::log::Level::fatal, "main", ex.what());
+    }
+
 }

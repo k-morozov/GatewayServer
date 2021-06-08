@@ -3,7 +3,7 @@
 //
 
 #include "gtest/gtest.h"
-#include "tools/log/Logger.h"
+#include "sdk/common/log/Logger.h"
 
 int main(int argc, char **argv) {
     goodok::log::configure(goodok::log::Level::fatal);

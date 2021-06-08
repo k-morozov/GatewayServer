@@ -5,10 +5,16 @@ project(sdk-goodok)
 set(APP_NAME sdk-goodok)
 
 file(GLOB FILES_SRC
-        "${CMAKE_SOURCE_DIR}/src/tools/log/Logger.cpp"
+        "common/log/*.cpp"
+        "common/*.h"
         "context/*.cpp"
-        "network/AcceptProcess.h"
         "network/*.cpp"
+        "network/AcceptProcess.h"
+        "network/session/*.cpp"
+        "engine/*.cpp"
+        "channels/*.cpp"
+        "channels/users/IUser.h"
+        "channels/users/*.cpp"
 )
 
 add_library(${APP_NAME} STATIC ${FILES_SRC})
@@ -22,7 +28,7 @@ set_target_properties(${APP_NAME} PROPERTIES
 
 target_include_directories(${APP_NAME}
         PUBLIC
-            "src/tools/log/"
+            "common/"
             "context/"
             "network/"
         PRIVATE

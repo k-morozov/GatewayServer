@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 set(APP_NAME ut_server)
 
 file(GLOB SRC_FILES
-        "${CMAKE_SOURCE_DIR}/src/tools/log/*.cpp"
+        "${CMAKE_SOURCE_DIR}/src/sdk/log/*.cpp"
         "*.cpp"
 )
 
@@ -23,7 +23,7 @@ target_include_directories(${APP_NAME}
 )
 
 set_target_properties(${APP_NAME} PROPERTIES
-        CXX_STANDARD 17
+        CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
 )
 
