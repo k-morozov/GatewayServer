@@ -151,7 +151,7 @@ namespace goodok {
                 log::write(log::Level::error, "processRequest", "Unknown command in header");
                 break;
             case command::TypeCommand::RegistrationRequest:
-                log::write(log::Level::info, "processRequest", "Registration request");
+                log::write(log::Level::info, "processRequest", "get Registration request");
                 if (request.has_registration_request()) {
                     log::write(log::Level::debug, "processRequest", boost::format("login=%1%, password=%2%")
                                                                     % request.registration_request().login() % request.registration_request().password());
@@ -159,7 +159,6 @@ namespace goodok {
                         engine->reg(weak_from_this(), request.registration_request());
                     }
                 } else {
-                    // @TODO notification user?
                     log::write(log::Level::error, "processRequest", "RegistrationRequest: Mismatch command in header and type request in body");
                     auto buffer = MsgFactory::serialize<command::TypeCommand::RegistrationResponse>(0);
                     write(buffer);
@@ -167,12 +166,9 @@ namespace goodok {
                 break;
             case command::TypeCommand::RegistrationResponse:
                 log::write(log::Level::error, "processRequest", "RegistrationResponse should not come here");
-                if (auto engine = engine_.lock()) {
-                    engine->reg(weak_from_this(), request.registration_request());
-                }
                 break;
             case command::TypeCommand::AuthorisationRequest:
-                log::write(log::Level::info, "processRequest", "Authorisation request");
+                log::write(log::Level::info, "processRequest", "get Authorisation request");
                 if (request.has_authorisation_request()) {
                     log::write(log::Level::debug, "processRequest", boost::format("login=%1%, password=%2%")
                         % request.authorisation_request().login() % request.authorisation_request().password());
@@ -180,7 +176,6 @@ namespace goodok {
                         engine->auth(weak_from_this(), request.authorisation_request());
                     }
                 } else {
-                    // @TODO notification user?
                     log::write(log::Level::error, "processRequest", "AuthorisationRequest: Mismatch command in header and type request in body");
                     auto buffer = MsgFactory::serialize<command::TypeCommand::AuthorisationResponse>(0);
                     write(buffer);

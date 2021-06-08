@@ -9,52 +9,55 @@ namespace goodok {
 
     void QueryEngine::reg(sessionWeakPtr const& sessionWeak, Serialize::RegistrationRequest const& request)
     {
-        std::size_t id = 0;
+        std::size_t client_id = 0;
         userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
 
         if (auto it = usersData_.find(userPtr); it==usersData_.end()) {
-            id = ++counterId_;
-            userPtr->setId(id);
+            client_id = ++counterId_;
+            userPtr->setId(client_id);
             usersData_.insert(userPtr);
             idClients_[userPtr->getId()] = userPtr;
             log::write(log::Level::info, "QueryEngine",
-                       boost::format("registration new user. login=%1%, id=%2%") % userPtr->getName() % userPtr->getId());
+                       boost::format("registration new user. login=%1%, client_id=%2%") % userPtr->getName() % userPtr->getId());
         } else {
             log::write(log::Level::warning, "QueryEngine",
                        boost::format("registration failed. user=%1% contains yet.") % userPtr->getName());
         }
 
         if (auto session = sessionWeak.lock()) {
-            auto buffer = MsgFactory::serialize<command::TypeCommand::RegistrationResponse>(id);
+            auto buffer = MsgFactory::serialize<command::TypeCommand::RegistrationResponse>(client_id);
             session->write(buffer);
         }
     }
 
     void QueryEngine::auth(sessionWeakPtr const& sessionWeak, Serialize::AuthorisationRequest const& request)
     {
-        std::size_t id = 0;
+        std::size_t client_id = 0;
         userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
 
-        // @TODO add checks for it
         if (auto it = usersData_.find(userPtr); it!=usersData_.end()) {
-            if ((*it)->getPassword() == request.password()) {
-                (*it)->updateSession(sessionWeak);
-                log::write(log::Level::info, "QueryEngine",
-                           boost::format("authorisation user. login=%1%, id=%2%")
-                           % request.login() % (*it)->getId());
-                id = (*it)->getId();
+            if (*it) {
+                if ((*it)->getPassword() == request.password()) {
+                    (*it)->updateSession(sessionWeak);
+                    log::write(log::Level::info, "QueryEngine",
+                               boost::format("authorisation user. login=%1%, id=%2%")
+                               % request.login() % (*it)->getId());
+                    client_id = (*it)->getId();
+                } else {
+                    log::write(log::Level::warning, "QueryEngine",
+                               boost::format("wrong password. login=%1%") % request.login());
+                }
             } else {
-                log::write(log::Level::warning, "QueryEngine",
-                           boost::format("wrong password. login=%1%") % request.login());
+                log::write(log::Level::error, "QueryEngine",
+                          boost::format("Invalid userData login=%1%") % request.login());
             }
-
         } else {
             log::write(log::Level::warning, "QueryEngine",
                        boost::format("user not found. login=%1%") % request.login());
         }
 
         if (auto session = sessionWeak.lock()) {
-            auto buffer = MsgFactory::serialize<command::TypeCommand::AuthorisationResponse>(id);
+            auto buffer = MsgFactory::serialize<command::TypeCommand::AuthorisationResponse>(client_id);
             session->write(buffer);
         }
 
