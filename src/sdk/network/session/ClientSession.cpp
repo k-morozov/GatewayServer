@@ -234,6 +234,8 @@ namespace goodok {
                 messages.push_back(message);
 
                 if (request.has_history_request()) {
+                    log::write(log::Level::error, "processRequest",
+                               "generate fake response for HistoryRequest");
                     auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(
                             request.history_request().channel_name(), messages);
                     write(buffer);

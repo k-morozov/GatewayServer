@@ -65,12 +65,16 @@ namespace goodok {
         if (!nameChannels_.contains(request.channel_name())) {
             std::size_t id = ++counterId_;
             nameChannels_.insert({request.channel_name(), std::make_shared<Channel>(request.channel_name(), id)});
+            log::write(log::Level::info, "QueryEngine",
+                       boost::format("generate new id=%1% for channel.") % id);
         }
 
         if (auto it_channel = nameChannels_.find(request.channel_name()); it_channel!=nameChannels_.end()) {
             std::size_t idClient = request.client_id();
             if (auto it_id_client = idClients_.find(idClient); it_id_client != idClients_.end()) {
                 if (it_channel->second) {
+                    log::write(log::Level::info, "QueryEngine",
+                               boost::format("add new user=%1% to channel=%2%") % it_id_client->second->getName() % it_channel->second->getName());
                     it_channel->second->addUser(it_id_client->second);
                 }
             } else {
