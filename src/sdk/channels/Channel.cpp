@@ -57,10 +57,14 @@ namespace goodok {
                              [dt](command::ClientTextMsg const& msg) {
                     return dt == DateTime() || dt < msg.dt;
                 });
-                auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(name_, responseHistory);
-                session->write(buffer);
+                if (!responseHistory.empty()) {
+                    auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(name_, responseHistory);
+                    session->write(buffer);
+                } else {
+                    log::write(log::Level::error, boost::format("Channel=%1%") % name_,
+                               "have not got a new messages");
+                }
             }
-
         }
     }
 
