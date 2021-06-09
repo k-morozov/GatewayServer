@@ -28,13 +28,6 @@ namespace goodok {
             return;
         }
 
-        if (auto session = user->getSession().lock()) {
-            for(auto const& msg : history_) {
-                auto buffer = MsgFactory::serialize<command::TypeCommand::EchoResponse>(msg);
-                session->write(buffer);
-            }
-        }
-
         if (auto it = std::find(std::begin(users_), std::end(users_),user); it == users_.end())
         {
             users_.push_back(user);

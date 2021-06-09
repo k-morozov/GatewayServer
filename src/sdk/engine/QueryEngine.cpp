@@ -116,6 +116,14 @@ namespace goodok {
                                boost::format("add new user=%1% to channel=%2%") % it_id_client->second->getName() % it_channel->second->getName());
                     it_channel->second->addUser(it_id_client->second);
                     clientChannels_[it_id_client->second->getId()].push_back(request.channel_name());
+
+                    for(std::string const& channel : clientChannels_[it_id_client->second->getId()]) {
+                        log::write(log::Level::info, "QueryEngine",
+                                   boost::format("user=%1% has channel=%2%") % it_id_client->second->getName() % channel);
+                    }
+                } else {
+                    log::write(log::Level::error, "QueryEngine",
+                               boost::format("failed joinRoom. do not find channel=%1% in engine") % request.channel_name());
                 }
             } else {
                 log::write(log::Level::error, "QueryEngine",
@@ -130,7 +138,6 @@ namespace goodok {
 
     void QueryEngine::sendText(sessionWeakPtr const& /*session*/, Serialize::TextRequest const& request)
     {
-//        msg_text_t
         command::ClientTextMsg message{
                 .author=request.login(),
                 .text=request.text(),
