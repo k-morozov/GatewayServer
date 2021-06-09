@@ -22,17 +22,9 @@ namespace goodok {
 
     void Channel::addUser(userPtr const& user)
     {
-        // @TODO get history
         if (!user) {
             log::write(log::Level::error, "Channel", "addUser: user is nullptr");
             return;
-        }
-
-        if (auto session = user->getSession().lock()) {
-            for(auto const& msg : history_) {
-                auto buffer = MsgFactory::serialize<command::TypeCommand::EchoResponse>(msg);
-                session->write(buffer);
-            }
         }
 
         if (auto it = std::find(std::begin(users_), std::end(users_),user); it == users_.end())
@@ -61,7 +53,7 @@ namespace goodok {
             }
             if (auto session = it_user->second->getSession().lock()) {
                 auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(name_, history_);
-//                session->write(buffer);
+                session->write(buffer);
             }
 
         }
