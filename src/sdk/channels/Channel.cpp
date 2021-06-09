@@ -43,7 +43,7 @@ namespace goodok {
         }
     }
 
-    void Channel::sendHistory(std::size_t client_id)
+    void Channel::sendHistory(std::size_t client_id, DateTime const& dt)
     {
         if (auto it_user=idUsers_.find(client_id); it_user != idUsers_.end()) {
             if (!it_user->second) {
@@ -52,10 +52,19 @@ namespace goodok {
                 return;
             }
             if (auto session = it_user->second->getSession().lock()) {
-                auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(name_, history_);
-                session->write(buffer);
+                std::deque<command::ClientTextMsg> responseHistory;
+                std::copy_if(history_.begin(), history_.end(), std::back_inserter(responseHistory),
+                             [dt](command::ClientTextMsg const& msg) {
+                    return dt == DateTime() || dt < msg.dt;
+                });
+                if (!responseHistory.empty()) {
+                    auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(name_, responseHistory);
+                    session->write(buffer);
+                } else {
+                    log::write(log::Level::error, boost::format("Channel=%1%") % name_,
+                               "have not got a new messages");
+                }
             }
-
         }
     }
 

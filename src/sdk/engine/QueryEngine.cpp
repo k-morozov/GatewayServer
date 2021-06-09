@@ -70,7 +70,12 @@ namespace goodok {
         auto it_channel = nameChannels_.find(request.channel_name());
         if (it_channel != nameChannels_.end()) {
             if (it_channel->second) {
-                it_channel->second->sendHistory(request.client_id());
+                DateTime since = DateTime(
+                        Time(request.since().seconds(), request.since().minutes(), request.since().hours()),
+                        Date(request.since().day(), request.since().month(), request.since().year())
+                );
+
+                it_channel->second->sendHistory(request.client_id(), since);
             } else {
                 log::write(log::Level::error, "QueryEngine",
                            boost::format("ptr to channel=%1% failed") % request.channel_name());
@@ -99,13 +104,13 @@ namespace goodok {
         }
     }
 
-    void QueryEngine::joinRoom(sessionWeakPtr const& /*session*/, Serialize::JoinRoomRequest const& request)
+    void QueryEngine::joinRoom(Serialize::JoinRoomRequest const& request)
     {
         if (!nameChannels_.contains(request.channel_name())) {
             std::size_t id = ++counterId_;
             nameChannels_.insert({request.channel_name(), std::make_shared<Channel>(request.channel_name(), id)});
             log::write(log::Level::info, "QueryEngine",
-                       boost::format("generate new id=%1% for channel.") % id);
+                       boost::format("generate new channel=%1%, id=%2%.") % request.channel_name() % id);
         }
 
         if (auto it_channel = nameChannels_.find(request.channel_name()); it_channel!=nameChannels_.end()) {
@@ -117,10 +122,10 @@ namespace goodok {
                     it_channel->second->addUser(it_id_client->second);
                     clientChannels_[it_id_client->second->getId()].push_back(request.channel_name());
 
-                    for(std::string const& channel : clientChannels_[it_id_client->second->getId()]) {
-                        log::write(log::Level::info, "QueryEngine",
-                                   boost::format("user=%1% has channel=%2%") % it_id_client->second->getName() % channel);
-                    }
+//                    for(std::string const& channel : clientChannels_[it_id_client->second->getId()]) {
+//                        log::write(log::Level::trace, "QueryEngine",
+//                                   boost::format("user=%1% has channel=%2%") % it_id_client->second->getName() % channel);
+//                    }
                 } else {
                     log::write(log::Level::error, "QueryEngine",
                                boost::format("failed joinRoom. do not find channel=%1% in engine") % request.channel_name());
@@ -136,13 +141,25 @@ namespace goodok {
 
     }
 
-    void QueryEngine::sendText(sessionWeakPtr const& /*session*/, Serialize::TextRequest const& request)
+    void QueryEngine::sendText(Serialize::TextRequest const& request)
     {
         command::ClientTextMsg message{
                 .author=request.login(),
                 .text=request.text(),
                 .channel_name=request.channel_name(),
-                .dt={} //request.datetime()
+                // @TODO find conversion
+                .dt= DateTime(
+                        Time(
+                                request.datetime().seconds(),
+                                request.datetime().minutes(),
+                                request.datetime().hours()
+                        ),
+                        Date(
+                            request.datetime().day(),
+                            request.datetime().month(),
+                            request.datetime().year()
+                        )
+                )
         };
 
         auto it_channel = nameChannels_.find(request.channel_name());
