@@ -22,7 +22,6 @@ namespace goodok {
 
     void Channel::addUser(userPtr const& user)
     {
-        // @TODO get history
         if (!user) {
             log::write(log::Level::error, "Channel", "addUser: user is nullptr");
             return;
