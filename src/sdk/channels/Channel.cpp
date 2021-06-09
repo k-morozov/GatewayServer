@@ -61,7 +61,7 @@ namespace goodok {
             }
             if (auto session = it_user->second->getSession().lock()) {
                 auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(name_, history_);
-//                session->write(buffer);
+                session->write(buffer);
             }
 
         }

@@ -65,6 +65,8 @@ namespace goodok {
 
     void QueryEngine::getHistory(Serialize::HistoryRequest const& request)
     {
+        log::write(log::Level::info, "QueryEngine",
+                   boost::format("get history, user=%1%, channel=%2%") % request.client_id() % request.channel_name());
         auto it_channel = nameChannels_.find(request.channel_name());
         if (it_channel != nameChannels_.end()) {
             if (it_channel->second) {
