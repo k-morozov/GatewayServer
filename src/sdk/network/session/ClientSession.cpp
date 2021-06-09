@@ -96,20 +96,6 @@ namespace goodok {
             return;
         }
 
-//        auto task = [selfWeak = weak_from_this()](Serialize::Header const& /*header*/, Serialize::Request const& request)
-//        {
-//            if (request.has_authorisation_request()) {
-//                auto login = request.authorisation_request().login();
-//                auto password = request.authorisation_request().password();
-//                log::write(log::Level::debug, "ClientSession",
-//                           boost::format("auth request: login=%1%, pass=%2%") % login % password);
-//                if (auto self = selfWeak.lock()) {
-//                    Serialize::Response response;
-//                    self->write(response);
-//                }
-//            }
-//        };
-
         auto callback = [selfWeak = weak_from_this()](boost::system::error_code ec, std::size_t nbytes) mutable {
             if (auto self = selfWeak.lock()) {
                 self->runRead(ec, nbytes);
@@ -142,7 +128,7 @@ namespace goodok {
     {
         writer_->write(message);
     }
-//    @TODO query?
+
     void ClientSession::processRequest(Serialize::Header const& header, Serialize::Request const& request)
     {
         switch (static_cast<command::TypeCommand>(header.command()))
@@ -191,7 +177,7 @@ namespace goodok {
                                boost::format("login=%1%, channel_name=%2%, room_id=%3%. text=%4%")
                         % request.text_request().login() % request.text_request().channel_name() % request.text_request().room_id() % request.text_request().text());
                     if (auto engine = engine_.lock()) {
-                        engine->sendText(weak_from_this(), request.text_request());
+                        engine->sendText(request.text_request());
                     }
                 } else {
                     log::write(log::Level::error, "processRequest", "SendTextRequest: Mismatch command in header and type request in body");
@@ -200,6 +186,7 @@ namespace goodok {
                 }
                 break;
             case command::TypeCommand::EchoResponse:
+                log::write(log::Level::error, "processRequest", "EchoResponse should not come here");
                 break;
             case command::TypeCommand::JoinRoomRequest:
                 log::write(log::Level::info, "processRequest", "JoinRoom request");
@@ -208,7 +195,7 @@ namespace goodok {
                                boost::format("client_id=%1%, channel_name=%2%")
                                % request.join_room_request().client_id() % request.join_room_request().channel_name());
                     if (auto engine = engine_.lock()) {
-                        engine->joinRoom(weak_from_this(), request.join_room_request());
+                        engine->joinRoom(request.join_room_request());
                     }
                 } else {
                     log::write(log::Level::error, "processRequest", "JoinRoomRequest: Mismatch command in header and type request in body");
@@ -233,6 +220,7 @@ namespace goodok {
                 break;
             }
             case command::TypeCommand::HistoryResponse:
+                log::write(log::Level::error, "processRequest", "HistoryResponse should not come here");
                 break;
             case command::TypeCommand::ChannelsRequest:
                 log::write(log::Level::info, "processRequest", "Channels request");
@@ -246,6 +234,7 @@ namespace goodok {
                 }
                 break;
             case command::TypeCommand::ChannelsResponse:
+                log::write(log::Level::error, "processRequest", "ChannelsResponse should not come here");
                 break;
             default:
                 log::write(log::Level::error, "processRequest", "Failed command in header");

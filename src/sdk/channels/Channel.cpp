@@ -43,7 +43,7 @@ namespace goodok {
         }
     }
 
-    void Channel::sendHistory(std::size_t client_id)
+    void Channel::sendHistory(std::size_t client_id, DateTime const& dt)
     {
         if (auto it_user=idUsers_.find(client_id); it_user != idUsers_.end()) {
             if (!it_user->second) {
@@ -52,7 +52,12 @@ namespace goodok {
                 return;
             }
             if (auto session = it_user->second->getSession().lock()) {
-                auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(name_, history_);
+                std::deque<command::ClientTextMsg> responseHistory;
+                std::copy_if(history_.begin(), history_.end(), std::back_inserter(responseHistory),
+                             [dt](command::ClientTextMsg const& msg) {
+                    return dt == DateTime() || dt < msg.dt;
+                });
+                auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(name_, responseHistory);
                 session->write(buffer);
             }
 

@@ -24,7 +24,7 @@ namespace goodok {
         std::string getName() const { return name_; }
 
         void addUser(userPtr const& user);
-        void sendHistory(std::size_t id);
+        void sendHistory(std::size_t id, DateTime const& dt);
         void write(command::ClientTextMsg const&);
 
         ~Channel() = default;
