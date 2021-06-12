@@ -23,7 +23,7 @@ namespace goodok {
                 .id = client_id
             };
             userPtr userPtr = UserManager::create(userSettings);
-            manager_->push(client_id, userPtr);
+            manager_->push(userPtr);
 
             log::write(log::Level::info, "QueryEngine",
                        boost::format("registration new user: login=%1%, client_id=%2%") % userPtr->getName() % userPtr->getId());
@@ -54,7 +54,7 @@ namespace goodok {
                     .id = client_id
             };
             userPtr userPtr = UserManager::create(userSettings);
-            manager_->push(client_id, userPtr);
+            manager_->push(userPtr);
 
             log::write(log::Level::info, "QueryEngine",
                        boost::format("authorisation user. login=%1%, id=%2%")

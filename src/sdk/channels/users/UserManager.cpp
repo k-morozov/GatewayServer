@@ -15,16 +15,21 @@ namespace goodok {
         return std::make_shared<MakeSharedHelper<User>>(settings);
     }
 
-    void UserManager::push(db::type_id_user client_id, userPtr data) {
-        if (idClients_.contains(client_id)) {
+    void UserManager::push(userPtr data) {
+        if (!data) {
+            log::write(log::Level::error, "UserManager::push", "data is nullptr");
+            return;
+        }
+
+        if (idClients_.contains(data->getId())) {
             // @TODO check other params data with current User
             log::write(log::Level::info, "UserManager",
-                       boost::format("update session in client: name=%1%, id=%2%") % data->getName() % client_id);
-            idClients_[client_id]->updateSession(data->getSession());
+                       boost::format("update session in client: name=%1%, id=%2%") % data->getName() % data->getId());
+            idClients_[data->getId()]->updateSession(data->getSession());
         } else {
             log::write(log::Level::info, "UserManager",
-                       boost::format("create new client: name=%1%, id=%2%") % data->getName() % client_id);
-            idClients_[client_id] = std::move(data);
+                       boost::format("create new client: name=%1%, id=%2%") % data->getName() % data->getId());
+            idClients_[data->getId()] = std::move(data);
         }
     }
 

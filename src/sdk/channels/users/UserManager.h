@@ -18,9 +18,9 @@ namespace goodok {
 
         static userPtr create(UserSettings const&);
 
-        void push(db::type_id_user, userPtr);
-        userPtr getUser(db::type_id_user);
+        void push(userPtr);
 
+        userPtr getUser(db::type_id_user);
 
     private:
         std::unordered_map<db::type_id_user, userPtr> idClients_;
