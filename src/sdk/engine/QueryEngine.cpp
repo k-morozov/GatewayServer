@@ -17,9 +17,9 @@ namespace goodok {
 
         if (client_id != db::REG_LOGIN_IS_BUSY) {
             userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
-            userPtr->updateSession(sessionWeak); // @TODO useless?
             userPtr->setId(client_id);
-            idClients_[client_id] = userPtr;
+            manager_->push(client_id, userPtr);
+
             log::write(log::Level::info, "QueryEngine",
                        boost::format("registration new user. login=%1%, client_id=%2%") % userPtr->getName() % userPtr->getId());
         } else {
@@ -42,11 +42,10 @@ namespace goodok {
         auto client_id = db_->checkAuthUser(settings);
 
         if (client_id != db::AUTH_LOGIN_IS_NOT_AVAILABLE) {
-//            userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
-            auto userPtr = idClients_[client_id];
-            userPtr->updateSession(sessionWeak); // @TODO useless?
-//            userPtr->setId(client_id);
-//            idClients_[client_id] = userPtr;
+            userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
+            userPtr->setId(client_id);
+            manager_->push(client_id, userPtr);
+
             log::write(log::Level::info, "QueryEngine",
                        boost::format("authorisation user. login=%1%, id=%2%")
                        % userPtr->getName() % userPtr->getId());
@@ -84,14 +83,11 @@ namespace goodok {
 
     void QueryEngine::getChannels(Serialize::ChannelsRequest const& request)
     {
-        if (auto it_user = idClients_.find(request.client_id()); it_user != idClients_.end()) {
-            if (it_user->second) {
-                if (auto session = it_user->second->getSession().lock()) {
-                    auto channels = db_->getUserNameChannels(request.client_id()); // lazy?
-                    auto buffer = MsgFactory::serialize<command::TypeCommand::ChannelsResponse>(channels);
-                    session->write(buffer);
-                }
-            }
+        auto clientPtr = manager_->getUser(request.client_id());
+        if (auto session = clientPtr->getSession().lock()) {
+            auto channels = db_->getUserNameChannels(request.client_id()); // lazy?
+            auto buffer = MsgFactory::serialize<command::TypeCommand::ChannelsResponse>(channels);
+            session->write(buffer);
         }
     }
 
@@ -99,21 +95,22 @@ namespace goodok {
     {
         if (!db_->hasChannel(request.channel_name())) {
             auto channel_id = db_->createChannel(request.channel_name());
-            nameChannels_[request.channel_name()] = std::make_shared<Channel>(db_, request.channel_name(), channel_id);
+            nameChannels_[request.channel_name()] = std::make_shared<Channel>(manager_, db_, request.channel_name(), channel_id);
             log::write(log::Level::info, "QueryEngine",
                        boost::format("generate new channel: name=%1%, id=%2%.") % request.channel_name() % channel_id);
         }
 
         std::size_t client_id = request.client_id();
-        if (idClients_.contains(client_id)) {
-            auto channelPtr = nameChannels_[request.channel_name()];
-            auto clientPtr = idClients_[client_id];
-            channelPtr->addUser(clientPtr);
-            db_->joinClientChannel(client_id, request.channel_name());
-        } else {
+
+        auto channelPtr = nameChannels_[request.channel_name()];
+        auto clientPtr = manager_->getUser(client_id);
+        if (!clientPtr) {
             log::write(log::Level::error, "QueryEngine",
                        boost::format("failed joinRoom. do not find client_id=%1% in engine") % request.client_id());
+            return;
         }
+        channelPtr->addUser(clientPtr);
+        db_->joinClientChannel(client_id, request.channel_name());
     }
 
     void QueryEngine::sendText(Serialize::TextRequest const& request)

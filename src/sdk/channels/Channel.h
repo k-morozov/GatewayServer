@@ -7,6 +7,7 @@
 
 #include "sdk/database/IDatabase.h"
 #include "sdk/channels/users/IUser.h"
+#include "sdk/channels/users/UserManager.h"
 
 #include <string>
 #include <list>
@@ -20,7 +21,7 @@ namespace goodok {
 
     class Channel {
     public:
-        Channel(std::weak_ptr<db::IDatabase> db, std::string const& name, std::size_t id);
+        Channel(std::shared_ptr<UserManager> manager, std::weak_ptr<db::IDatabase> db, std::string const& name, std::size_t id);
 
         std::size_t getId() const { return id_; }
         std::string getName() const { return name_; }
@@ -31,14 +32,14 @@ namespace goodok {
 
         ~Channel() = default;
     private:
+        std::shared_ptr<UserManager> manager_;
         std::weak_ptr<db::IDatabase> db_;
         const std::string name_;
         const std::size_t id_; // @TODO who generate?
 
 //        @TODO weak? list?
         std::list<userPtr> usersOnline_; // online users
-        std::unordered_map<std::size_t, userPtr> idUsers_; // id->User
-
+        std::unordered_set<db::type_id_user> idUsers_;
     };
 
 }

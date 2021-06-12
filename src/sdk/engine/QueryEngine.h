@@ -9,6 +9,7 @@
 
 #include "sdk/network/session/ISession.h"
 #include "sdk/channels/users/IUser.h"
+#include "sdk/channels/users/UserManager.h"
 #include "sdk/channels/Channel.h"
 #include "sdk/common/log/Logger.h"
 #include "sdk/database/WrapperPg.h"
@@ -26,7 +27,8 @@ namespace goodok {
      */
     class QueryEngine {
     public:
-        QueryEngine() :
+        QueryEngine(std::shared_ptr<UserManager> manager) :
+            manager_(std::move(manager)),
             db_(std::make_shared<db::WrapperPg>())
             {}
         ~QueryEngine() = default;
@@ -39,9 +41,9 @@ namespace goodok {
         void joinRoom(Serialize::JoinRoomRequest const& request);
         void sendText(Serialize::TextRequest const& request);
     private:
+        std::shared_ptr<UserManager> manager_;
         std::shared_ptr<db::IDatabase> db_;
 
-        std::unordered_map<db::type_id_user, userPtr> idClients_;
         std::unordered_map<std::string, channelPtr> nameChannels_;
     };
 }

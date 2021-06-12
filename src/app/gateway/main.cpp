@@ -60,8 +60,9 @@ int main(int argc, char *argv[])
         auto params = setParameters(argc, argv);
         goodok::log::configure(goodok::log::Level::debug);
 
+        auto manager = std::make_shared<goodok::UserManager>();
         auto ctx = std::make_shared<goodok::AsyncContext>();
-        goodok::enginePtr engine = std::make_shared<goodok::QueryEngine>();
+        goodok::enginePtr engine = std::make_shared<goodok::QueryEngine>(manager);
 
         using AcceptType = goodok::AcceptProcess<goodok::ClientSession>;
         auto nwk = std::make_shared<MakeSharedHelper<AcceptType>>(ctx, engine, 7777);

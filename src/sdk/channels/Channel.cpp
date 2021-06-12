@@ -8,7 +8,8 @@
 
 namespace goodok {
 
-    Channel::Channel(std::weak_ptr<db::IDatabase> db, std::string const& name, std::size_t id) :
+    Channel::Channel(std::shared_ptr<UserManager> manager, std::weak_ptr<db::IDatabase> db, std::string const& name, std::size_t id) :
+        manager_(std::move(manager)),
         db_(std::move(db)),
         name_(name),
         id_(id)
@@ -31,7 +32,7 @@ namespace goodok {
         if (auto it = std::find(std::begin(usersOnline_), std::end(usersOnline_),user); it == usersOnline_.end())
         {
             usersOnline_.push_back(user);
-            idUsers_.insert({user->getId(), user});
+            idUsers_.insert(user->getId()); // @TODO save to db
 
             log::write(log::Level::error, boost::format("Channel=%1%") % name_,
                        boost::format("add user: name=%1%, id=%2%") % user->getName() % user->getId());
@@ -46,35 +47,44 @@ namespace goodok {
 
     void Channel::sendHistory(std::size_t client_id, DateTime const& dt)
     {
-        if (auto it_user=idUsers_.find(client_id); it_user != idUsers_.end()) {
-            if (!it_user->second) {
+        if (!idUsers_.contains(client_id)) {
+            log::write(log::Level::error, boost::format("Channel=%1%") % name_,
+                       boost::format("user_id=%1% not used channel=%2%") % client_id % name_);
+            return;
+        }
+
+        auto clientPtr = manager_->getUser(client_id);
+        if (!clientPtr) {
+            log::write(log::Level::error, boost::format("Channel=%1%") % name_,
+                boost::format("failed ptr to user_id=%1%") % client_id);
+            return;
+        }
+
+        if (auto session = clientPtr->getSession().lock()) {
+            std::deque<command::ClientTextMsg> responseHistory;
+            if (auto db = db_.lock()) {
+                auto history = db->getHistory(id_);
+                std::copy_if(history.begin(), history.end(), std::back_inserter(responseHistory),
+                             [dt](command::ClientTextMsg const& msg) {
+                    return dt == DateTime() || dt < msg.dt;
+                });
+            }
+            log::write(log::Level::info, boost::format("Channel=%1%") % name_,
+                       boost::format("count msg to send user = %1%") % responseHistory.size());
+            for(const auto& response : responseHistory) {
                 log::write(log::Level::error, boost::format("Channel=%1%") % name_,
-                    boost::format("failed ptr to user_id=%1%") % client_id);
-                return;
+                           boost::format("text = %1%") % response.text);
             }
-            if (auto session = it_user->second->getSession().lock()) {
-                std::deque<command::ClientTextMsg> responseHistory;
-                if (auto db = db_.lock()) {
-                    auto history = db->getHistory(id_);
-                    std::copy_if(history.begin(), history.end(), std::back_inserter(responseHistory),
-                                 [dt](command::ClientTextMsg const& msg) {
-                                     return dt == DateTime() || dt < msg.dt;
-                                 });
-                }
-                log::write(log::Level::info, boost::format("Channel=%1%") % name_,
-                           boost::format("count msg to send user = %1%") % responseHistory.size());
-                for(const auto& response : responseHistory) {
-                    log::write(log::Level::error, boost::format("Channel=%1%") % name_,
-                               boost::format("text = %1%") % response.text);
-                }
-                if (!responseHistory.empty()) {
-                    auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(name_, responseHistory);
-                    session->write(buffer);
-                } else {
-                    log::write(log::Level::error, boost::format("Channel=%1%") % name_,
-                               "have not got a new messages");
-                }
+            if (!responseHistory.empty()) {
+                auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(name_, responseHistory);
+                session->write(buffer);
+            } else {
+                log::write(log::Level::error, boost::format("Channel=%1%") % name_,
+                           "have not got a new messages");
             }
+        } else {
+            log::write(log::Level::warning, boost::format("Channel=%1%") % name_,
+                       "session dead");
         }
     }
 
