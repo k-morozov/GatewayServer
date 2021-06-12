@@ -11,7 +11,7 @@ namespace goodok {
         manager_(std::move(manager)),
         db_(std::make_shared<db::WrapperPg>())
     {
-        if (!manager) {
+        if (!manager_) {
             throw std::invalid_argument("manager pointer is nullptr");
         }
         if (!db_) {
@@ -136,7 +136,7 @@ namespace goodok {
                        boost::format("failed joinRoom. do not find client_id=%1% in engine") % request.client_id());
             return;
         }
-        channelPtr->addUser(clientPtr);
+        channelPtr->addUser(clientPtr->getId());
         db_->joinClientChannel(client_id, request.channel_name());
     }
 

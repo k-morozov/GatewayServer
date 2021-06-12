@@ -26,7 +26,7 @@ namespace goodok {
         std::size_t getId() const { return id_; }
         std::string getName() const { return name_; }
 
-        void addUser(userPtr const& user);
+        void addUser(db::type_id_user);
         void sendHistory(std::size_t id, DateTime const& dt);
         void write(command::ClientTextMsg const&);
 
@@ -38,8 +38,6 @@ namespace goodok {
         const std::string name_;
         const std::size_t id_; // @TODO who generate?
 
-//        @TODO weak? list?
-        std::list<userPtr> usersOnline_; // online users
         std::unordered_set<db::type_id_user> idUsers_;
     };
 

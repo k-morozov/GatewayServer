@@ -22,27 +22,26 @@ namespace goodok {
         }
     }
 
-    void Channel::addUser(userPtr const& user)
+    void Channel::addUser(db::type_id_user client_id)
     {
-        if (!user) {
-            log::write(log::Level::error, "Channel", "addUser: user is nullptr");
-            return;
-        }
-
-        if (auto it = std::find(std::begin(usersOnline_), std::end(usersOnline_),user); it == usersOnline_.end())
-        {
-            usersOnline_.push_back(user);
-            idUsers_.insert(user->getId()); // @TODO save to db
+        if (!idUsers_.contains(client_id)) {
+            idUsers_.insert(client_id);
+            auto user = manager_->getUser(client_id);
+            if (!user) {
+                log::write(log::Level::error, boost::format("Channel=%1%") % name_,
+                           boost::format("add user: not valid user with id=%1%") % client_id);
+                return;
+            }
 
             log::write(log::Level::error, boost::format("Channel=%1%") % name_,
                        boost::format("add user: name=%1%, id=%2%") % user->getName() % user->getId());
-        } else {
-            log::write(log::Level::error, boost::format("Channel=%1%") % name_, "update session for user in channel");
+
+            if (auto session = user->getSession().lock()) {
+                auto buffer = MsgFactory::serialize<command::TypeCommand::JoinRoomResponse>(name_, true);
+                session->write(buffer);
+            }
         }
-        if (auto session = user->getSession().lock()) {
-            auto buffer = MsgFactory::serialize<command::TypeCommand::JoinRoomResponse>(name_, true);
-            session->write(buffer);
-        }
+
     }
 
     void Channel::sendHistory(std::size_t client_id, DateTime const& dt)
@@ -70,11 +69,11 @@ namespace goodok {
                 });
             }
             log::write(log::Level::info, boost::format("Channel=%1%") % name_,
-                       boost::format("count msg to send user = %1%") % responseHistory.size());
-            for(const auto& response : responseHistory) {
-                log::write(log::Level::error, boost::format("Channel=%1%") % name_,
-                           boost::format("text = %1%") % response.text);
-            }
+                       boost::format("count messages to send user = %1%") % responseHistory.size());
+//            for(const auto& response : responseHistory) {
+//                log::write(log::Level::error, boost::format("Channel=%1%") % name_,
+//                           boost::format("text = %1%") % response.text);
+//            }
             if (!responseHistory.empty()) {
                 auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(name_, responseHistory);
                 session->write(buffer);
@@ -93,7 +92,8 @@ namespace goodok {
     {
         auto buffer = MsgFactory::serialize<command::TypeCommand::EchoResponse>(message);
 
-        for(auto const& user : usersOnline_) {
+        for(auto const& id : idUsers_) {
+            auto user = manager_->getUser(id);
             if (!user) {
                 continue;
             }
@@ -103,7 +103,6 @@ namespace goodok {
                 session->write(buffer);
             }
         }
-//        history_.push_back(message);
         if (auto db = db_.lock()) {
             db->addMsgHistory(id_, message);
         }
