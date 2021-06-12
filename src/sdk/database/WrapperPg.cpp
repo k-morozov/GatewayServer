@@ -48,4 +48,17 @@ namespace goodok::db {
         return id;
     }
 
+    std::deque<std::string> WrapperPg::getUserNameChannels(type_id_user const& client_id)
+    {
+        std::deque<std::string> result;
+        if (auto it = clientChannels_.find(client_id); it != clientChannels_.end()) {
+            result = it->second;
+        } else {
+            log::write(log::Level::error, boost::format("WrapperPg::%1%") % "getUserNameChannels",
+                       boost::format("user=%1% have not channels") % client_id);
+        }
+
+        return result;
+    }
+
 }

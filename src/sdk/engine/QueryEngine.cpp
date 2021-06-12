@@ -83,19 +83,14 @@ namespace goodok {
 
     void QueryEngine::getChannels(Serialize::ChannelsRequest const& request)
     {
-        if (clientChannels_.contains(request.client_id())) {
-            if (auto it_user = idClients_.find(request.client_id()); it_user != idClients_.end()) {
-                if (it_user->second) {
-                    if (auto session = it_user->second->getSession().lock()) {
-                        const auto& channels = clientChannels_[request.client_id()];
-                        auto buffer = MsgFactory::serialize<command::TypeCommand::ChannelsResponse>(channels);
-                        session->write(buffer);
-                    }
+        if (auto it_user = idClients_.find(request.client_id()); it_user != idClients_.end()) {
+            if (it_user->second) {
+                if (auto session = it_user->second->getSession().lock()) {
+                    auto channels = db_->getUserNameChannels(request.client_id()); // lazy?
+                    auto buffer = MsgFactory::serialize<command::TypeCommand::ChannelsResponse>(channels);
+                    session->write(buffer);
                 }
             }
-        } else {
-            log::write(log::Level::error, "QueryEngine",
-                       boost::format("user=%1% have not channels") % request.client_id());
         }
     }
 
@@ -117,10 +112,6 @@ namespace goodok {
                     it_channel->second->addUser(it_id_client->second);
                     clientChannels_[it_id_client->second->getId()].push_back(request.channel_name());
 
-//                    for(std::string const& channel : clientChannels_[it_id_client->second->getId()]) {
-//                        log::write(log::Level::trace, "QueryEngine",
-//                                   boost::format("user=%1% has channel=%2%") % it_id_client->second->getName() % channel);
-//                    }
                 } else {
                     log::write(log::Level::error, "QueryEngine",
                                boost::format("failed joinRoom. do not find channel=%1% in engine") % request.channel_name());

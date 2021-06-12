@@ -7,6 +7,8 @@
 
 #include "Settings.h"
 
+#include <deque>
+
 namespace goodok::db {
 
     using type_id_user = std::size_t;
@@ -19,6 +21,7 @@ namespace goodok::db {
 
         virtual type_id_user checkRegUser(InputSettings const&) = 0;
         virtual type_id_user checkAuthUser(InputSettings const&) = 0;
+        virtual std::deque<std::string> getUserNameChannels(type_id_user const&) = 0;
     };
 }
 
