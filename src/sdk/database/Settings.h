@@ -8,11 +8,16 @@
 #include <string>
 
 namespace goodok::db {
-    struct ConnectSettings{
+    struct ConnectSettings {
         std::string user = "worker";
         std::string password = "123";
         std::string host = "127.0.0.1";
         std::string db = "chat";
+    };
+
+    struct InputSettings {
+        std::string clientName;
+        std::string clientPassword;
     };
 }
 #endif //GOODOK_SERVERS_SETTINGS_H

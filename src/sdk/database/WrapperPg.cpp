@@ -13,12 +13,38 @@ namespace goodok::db {
         return true;
     }
 
-    type_id_user WrapperPg::checkRegUser(std::string const& clientName)
+    type_id_user WrapperPg::checkRegUser(InputSettings const& settings)
     {
         type_id_user id = REG_LOGIN_IS_BUSY;
-        if (!nameUsers_.contains(clientName)) {
+        if (!nameIdUsers_.contains(settings.clientName)) {
             id = generator_.generate();
+            nameIdUsers_[settings.clientName] = id;
+            nameSettingsUsers_[id] = settings;
         }
+        return id;
+    }
+
+    type_id_user WrapperPg::checkAuthUser(InputSettings const& settings)
+    {
+        type_id_user id = AUTH_LOGIN_IS_NOT_AVAILABLE;
+        if (nameIdUsers_.contains(settings.clientName)) {
+            auto temp_id = nameIdUsers_[settings.clientName];
+            if (auto it = nameSettingsUsers_.find(temp_id); it != nameSettingsUsers_.end()) {
+                if (it->second.clientPassword == settings.clientPassword) {
+                    id = temp_id;
+                } else {
+                    log::write(log::Level::warning, boost::format("WrapperPg::%1%") % "checkAuthUser",
+                               boost::format("wrong password. login=%1%") % settings.clientName);
+                }
+            } else {
+                log::write(log::Level::warning, boost::format("WrapperPg::%1%") % "checkAuthUser",
+                           "internal inconsistency");
+            }
+        } else {
+            log::write(log::Level::warning, boost::format("WrapperPg::%1%") % "checkAuthUser",
+                       boost::format("user not found. login=%1%") % settings.clientName);
+        }
+
         return id;
     }
 

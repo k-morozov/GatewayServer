@@ -9,13 +9,16 @@ namespace goodok {
 
     void QueryEngine::reg(sessionWeakPtr const& sessionWeak, Serialize::RegistrationRequest const& request)
     {
-        auto client_id = db_->checkRegUser(request.login());
+        db::InputSettings settings{
+            .clientName=request.login(),
+            .clientPassword=request.password()
+        };
+        auto client_id = db_->checkRegUser(settings);
 
         if (client_id != db::REG_LOGIN_IS_BUSY) {
             userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
             userPtr->setId(client_id);
-            usersData_.insert(userPtr);
-            idClients_[userPtr->getId()] = userPtr;
+            idClients_[client_id] = userPtr;
             log::write(log::Level::info, "QueryEngine",
                        boost::format("registration new user. login=%1%, client_id=%2%") % userPtr->getName() % userPtr->getId());
         } else {
@@ -31,28 +34,21 @@ namespace goodok {
 
     void QueryEngine::auth(sessionWeakPtr const& sessionWeak, Serialize::AuthorisationRequest const& request)
     {
-        std::size_t client_id = 0;
-        userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
+        db::InputSettings settings{
+                .clientName=request.login(),
+                .clientPassword=request.password()
+        };
+        auto client_id = db_->checkAuthUser(settings);
 
-        if (auto it = usersData_.find(userPtr); it!=usersData_.end()) {
-            if (*it) {
-                if ((*it)->getPassword() == request.password()) {
-                    (*it)->updateSession(sessionWeak);
-                    log::write(log::Level::info, "QueryEngine",
-                               boost::format("authorisation user. login=%1%, id=%2%")
-                               % request.login() % (*it)->getId());
-                    client_id = (*it)->getId();
-                } else {
-                    log::write(log::Level::warning, "QueryEngine",
-                               boost::format("wrong password. login=%1%") % request.login());
-                }
-            } else {
-                log::write(log::Level::error, "QueryEngine",
-                          boost::format("Invalid userData login=%1%") % request.login());
-            }
+        if (client_id != db::AUTH_LOGIN_IS_NOT_AVAILABLE) {
+            userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
+            userPtr->updateSession(sessionWeak);
+            idClients_[client_id] = userPtr;
+            log::write(log::Level::info, "QueryEngine",
+                       boost::format("authorisation user. login=%1%, id=%2%")
+                       % userPtr->getName() % userPtr->getId());
         } else {
-            log::write(log::Level::warning, "QueryEngine",
-                       boost::format("user not found. login=%1%") % request.login());
+
         }
 
         if (auto session = sessionWeak.lock()) {

@@ -17,7 +17,8 @@ namespace goodok::db {
 
         virtual bool connect(ConnectSettings const&) = 0;
 
-        virtual type_id_user checkRegUser(std::string const&) = 0;
+        virtual type_id_user checkRegUser(InputSettings const&) = 0;
+        virtual type_id_user checkAuthUser(InputSettings const&) = 0;
     };
 }
 

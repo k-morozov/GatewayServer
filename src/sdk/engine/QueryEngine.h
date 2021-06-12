@@ -40,10 +40,11 @@ namespace goodok {
         void sendText(Serialize::TextRequest const& request);
     private:
         std::shared_ptr<db::IDatabase> db_;
+
         // @TODO boost::uid?
         std::atomic<std::size_t> counterId_ = 0;
 
-        std::unordered_set<userPtr, IUserHash, IUserEqual> usersData_;
+//        std::unordered_map<db::type_id_user, userPtr> usersData_;
         std::unordered_map<std::size_t, userPtr> idClients_;
 
         std::unordered_map<std::size_t, std::deque<std::string>> clientChannels_;

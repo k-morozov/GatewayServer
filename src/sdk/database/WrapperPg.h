@@ -13,6 +13,8 @@
 namespace goodok::db {
 
     constexpr type_id_user REG_LOGIN_IS_BUSY = 0;
+    constexpr type_id_user AUTH_LOGIN_IS_NOT_AVAILABLE = 0;
+    constexpr type_id_user AUTH_WRONG_PASSWORD = 0;
 
     class GeneratorId {
     public:
@@ -31,10 +33,13 @@ namespace goodok::db {
 
         bool connect(ConnectSettings const& settings) override;
 
-        type_id_user checkRegUser(std::string const&) override;
+        type_id_user checkRegUser(InputSettings const&) override;
+
+        type_id_user checkAuthUser(InputSettings const&) override;
     private:
         GeneratorId generator_;
-        std::unordered_map<std::string, type_id_user> nameUsers_;
+        std::unordered_map<std::string, type_id_user> nameIdUsers_;
+        std::unordered_map<type_id_user, InputSettings> nameSettingsUsers_;
     };
 }
 
