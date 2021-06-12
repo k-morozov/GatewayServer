@@ -27,10 +27,7 @@ namespace goodok {
      */
     class QueryEngine {
     public:
-        QueryEngine(std::shared_ptr<UserManager> manager) :
-            manager_(std::move(manager)),
-            db_(std::make_shared<db::WrapperPg>())
-            {}
+        explicit QueryEngine(std::shared_ptr<UserManager> manager);
         ~QueryEngine() = default;
 
     public:

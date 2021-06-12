@@ -34,6 +34,7 @@ namespace goodok {
     private:
         std::shared_ptr<UserManager> manager_;
         std::weak_ptr<db::IDatabase> db_;
+
         const std::string name_;
         const std::size_t id_; // @TODO who generate?
 

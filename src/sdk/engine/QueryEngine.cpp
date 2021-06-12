@@ -7,9 +7,21 @@
 
 namespace goodok {
 
+    QueryEngine::QueryEngine(std::shared_ptr<UserManager> manager) :
+        manager_(std::move(manager)),
+        db_(std::make_shared<db::WrapperPg>())
+    {
+        if (!manager) {
+            throw std::invalid_argument("manager pointer is nullptr");
+        }
+        if (!db_) {
+            throw std::invalid_argument("database pointer is nullptr");
+        }
+    }
+
     void QueryEngine::reg(sessionWeakPtr const& sessionWeak, Serialize::RegistrationRequest const& request)
     {
-        db::InputSettings inputSettings{
+        db::InputSettings inputSettings {
             .clientName=request.login(),
             .clientPassword=request.password()
         };
@@ -22,11 +34,11 @@ namespace goodok {
                 .password = request.password(),
                 .id = client_id
             };
-            userPtr userPtr = UserManager::create(userSettings);
-            manager_->push(userPtr);
+            userPtr clientPtr = UserManager::create(userSettings);
+            manager_->push(clientPtr);
 
             log::write(log::Level::info, "QueryEngine",
-                       boost::format("registration new user: login=%1%, client_id=%2%") % userPtr->getName() % userPtr->getId());
+                       boost::format("registration new user: login=%1%, client_id=%2%") % clientPtr->getName() % clientPtr->getId());
         } else {
             log::write(log::Level::warning, "QueryEngine",
                        boost::format("registration failed. user=%1% contains yet.") % request.login());
@@ -40,7 +52,7 @@ namespace goodok {
 
     void QueryEngine::auth(sessionWeakPtr const& sessionWeak, Serialize::AuthorisationRequest const& request)
     {
-        db::InputSettings inputSettings{
+        db::InputSettings inputSettings {
                 .clientName=request.login(),
                 .clientPassword=request.password()
         };
@@ -53,12 +65,11 @@ namespace goodok {
                     .password = request.password(),
                     .id = client_id
             };
-            userPtr userPtr = UserManager::create(userSettings);
-            manager_->push(userPtr);
+            userPtr clientPtr = UserManager::create(userSettings);
+            manager_->push(clientPtr);
 
             log::write(log::Level::info, "QueryEngine",
-                       boost::format("authorisation user. login=%1%, id=%2%")
-                       % userPtr->getName() % userPtr->getId());
+                       boost::format("authorisation user. login=%1%, id=%2%") % clientPtr->getName() % clientPtr->getId());
         }
 
         if (auto session = sessionWeak.lock()) {
@@ -94,6 +105,12 @@ namespace goodok {
     void QueryEngine::getChannels(Serialize::ChannelsRequest const& request)
     {
         auto clientPtr = manager_->getUser(request.client_id());
+        if (!clientPtr) {
+            log::write(log::Level::error, "QueryEngine::getChannels",
+                       boost::format("client is nullptr") % request.client_id());
+            return;
+        }
+
         if (auto session = clientPtr->getSession().lock()) {
             auto channels = db_->getUserNameChannels(request.client_id()); // lazy?
             auto buffer = MsgFactory::serialize<command::TypeCommand::ChannelsResponse>(channels);
