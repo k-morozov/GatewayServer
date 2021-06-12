@@ -34,7 +34,7 @@ namespace goodok {
             if (auto socket = socketWeak_.lock()) {
                 auto callback = [selfWeak = weak_from_this()](boost::system::error_code, std::size_t)
                 {
-                    log::write(log::Level::info, "writeImpl_", "send");
+                    log::write(log::Level::info, "writeImpl_", "send response");
                     if (auto self = selfWeak.lock()) {
                         self->bufferWrite_.pop_front();
                         if (!self->bufferWrite_.empty()) {

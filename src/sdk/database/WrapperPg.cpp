@@ -81,4 +81,18 @@ namespace goodok::db {
         clientChannels_[client_id].push_back(channel_name);
     }
 
+    void WrapperPg::addMsgHistory(type_id_user channel_id, command::ClientTextMsg const& msg)
+    {
+        history_[channel_id].push_back(msg);
+    }
+
+    std::deque<command::ClientTextMsg> WrapperPg::getHistory(type_id_user channel_id)
+    {
+        std::deque<command::ClientTextMsg> result;
+        if (auto it = history_.find(channel_id); it != history_.end()) {
+            result = it->second;
+        }
+        return result;
+    }
+
 }

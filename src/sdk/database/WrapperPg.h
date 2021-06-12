@@ -44,12 +44,17 @@ namespace goodok::db {
         type_id_user createChannel(std::string const&) override;
 
         void joinClientChannel(type_id_user, std::string const&) override;
+
+        void addMsgHistory(type_id_user, command::ClientTextMsg const&) override;
+
+        std::deque<command::ClientTextMsg> getHistory(type_id_user) override;
     private:
         GeneratorId generator_;
         std::unordered_map<std::string, type_id_user> nameIdUsers_;
         std::unordered_map<type_id_user, InputSettings> nameSettingsUsers_;
         std::unordered_map<type_id_user, std::deque<std::string>> clientChannels_;
         std::unordered_map<std::string, type_id_user> nameIdChannels_;
+        std::unordered_map<type_id_user, std::deque<command::ClientTextMsg>> history_;
     };
 }
 

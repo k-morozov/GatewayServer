@@ -17,6 +17,7 @@ namespace goodok {
 
         if (client_id != db::REG_LOGIN_IS_BUSY) {
             userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
+            userPtr->updateSession(sessionWeak); // @TODO useless?
             userPtr->setId(client_id);
             idClients_[client_id] = userPtr;
             log::write(log::Level::info, "QueryEngine",
@@ -41,14 +42,14 @@ namespace goodok {
         auto client_id = db_->checkAuthUser(settings);
 
         if (client_id != db::AUTH_LOGIN_IS_NOT_AVAILABLE) {
-            userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
-            userPtr->updateSession(sessionWeak);
-            idClients_[client_id] = userPtr;
+//            userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
+            auto userPtr = idClients_[client_id];
+            userPtr->updateSession(sessionWeak); // @TODO useless?
+//            userPtr->setId(client_id);
+//            idClients_[client_id] = userPtr;
             log::write(log::Level::info, "QueryEngine",
                        boost::format("authorisation user. login=%1%, id=%2%")
                        % userPtr->getName() % userPtr->getId());
-        } else {
-
         }
 
         if (auto session = sessionWeak.lock()) {
@@ -98,9 +99,9 @@ namespace goodok {
     {
         if (!db_->hasChannel(request.channel_name())) {
             auto channel_id = db_->createChannel(request.channel_name());
-            nameChannels_[request.channel_name()] = std::make_shared<Channel>(request.channel_name(), channel_id);
+            nameChannels_[request.channel_name()] = std::make_shared<Channel>(db_, request.channel_name(), channel_id);
             log::write(log::Level::info, "QueryEngine",
-                       boost::format("generate new channel=%1%, id=%2%.") % request.channel_name() % channel_id);
+                       boost::format("generate new channel: name=%1%, id=%2%.") % request.channel_name() % channel_id);
         }
 
         std::size_t client_id = request.client_id();

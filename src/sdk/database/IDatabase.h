@@ -7,6 +7,8 @@
 
 #include "Settings.h"
 
+#include <protocol/protocol.h>
+
 #include <deque>
 
 namespace goodok::db {
@@ -25,6 +27,8 @@ namespace goodok::db {
         virtual bool hasChannel(std::string const&) const = 0;
         virtual type_id_user createChannel(std::string const&) = 0;
         virtual void joinClientChannel(type_id_user, std::string const&) = 0;
+        virtual  void addMsgHistory(type_id_user, command::ClientTextMsg const&) = 0;
+        virtual std::deque<command::ClientTextMsg> getHistory(type_id_user) = 0;
     };
 }
 
