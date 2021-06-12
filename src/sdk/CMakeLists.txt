@@ -15,6 +15,7 @@ file(GLOB FILES_SRC
         "channels/*.cpp"
         "channels/users/IUser.h"
         "channels/users/*.cpp"
+        "database/*.cpp"
 )
 
 add_library(${APP_NAME} STATIC ${FILES_SRC})

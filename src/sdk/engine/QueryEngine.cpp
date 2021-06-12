@@ -12,6 +12,10 @@ namespace goodok {
         std::size_t client_id = 0;
         userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
 
+        // @TODO here check in Db login
+//        db::ConnectSettings settings;
+//        db_->connect(settings);
+
         if (auto it = usersData_.find(userPtr); it==usersData_.end()) {
             client_id = ++counterId_;
             userPtr->setId(client_id);

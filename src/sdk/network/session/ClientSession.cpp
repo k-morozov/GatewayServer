@@ -104,12 +104,12 @@ namespace goodok {
 
         reenter(coroData_.coro_) for(;;)
         {
-            log::write(log::Level::debug, "ClientSession", "read header");
+            log::write(log::Level::trace, "ClientSession", "read header");
             yield boost::asio::async_read(*socket_,
                                           boost::asio::buffer(coroData_.bufferHeader_.data(), detail::MAX_SIZE_HEADER_BUFFER),
                                           callback);
 
-            log::write(log::Level::debug, "ClientSession", "read body");
+            log::write(log::Level::trace, "ClientSession", "read body");
 
             coroData_.header.ParseFromArray(coroData_.bufferHeader_.data(), detail::MAX_SIZE_HEADER_BUFFER);
 

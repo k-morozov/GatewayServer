@@ -33,8 +33,10 @@ namespace goodok {
         std::size_t id_; // @TODO who generate?
 
 //        @TODO weak? list?
-        std::list<userPtr> users_;
-        std::unordered_map<std::size_t, userPtr> idUsers_;
+        std::list<userPtr> usersOnline_; // online users
+        std::unordered_map<std::size_t, userPtr> idUsers_; // id->User
+
+        // @TODO to db
         std::deque<command::ClientTextMsg> history_;
     };
 

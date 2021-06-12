@@ -11,6 +11,7 @@
 #include "sdk/channels/users/IUser.h"
 #include "sdk/channels/Channel.h"
 #include "sdk/common/log/Logger.h"
+#include "sdk/database/WrapperPg.h"
 
 #include <unordered_set>
 
@@ -25,7 +26,9 @@ namespace goodok {
      */
     class QueryEngine {
     public:
-        QueryEngine() = default;
+        QueryEngine() :
+            db_(std::make_shared<db::WrapperPg>())
+            {}
         ~QueryEngine() = default;
 
     public:
@@ -36,6 +39,7 @@ namespace goodok {
         void joinRoom(Serialize::JoinRoomRequest const& request);
         void sendText(Serialize::TextRequest const& request);
     private:
+        std::shared_ptr<db::IDatabase> db_;
         // @TODO boost::uid?
         std::atomic<std::size_t> counterId_ = 0;
 

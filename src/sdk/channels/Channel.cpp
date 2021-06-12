@@ -27,9 +27,9 @@ namespace goodok {
             return;
         }
 
-        if (auto it = std::find(std::begin(users_), std::end(users_),user); it == users_.end())
+        if (auto it = std::find(std::begin(usersOnline_), std::end(usersOnline_),user); it == usersOnline_.end())
         {
-            users_.push_back(user);
+            usersOnline_.push_back(user);
             idUsers_.insert({user->getId(), user});
 
             log::write(log::Level::error, boost::format("Channel=%1%") % name_,
@@ -73,7 +73,7 @@ namespace goodok {
     {
         auto buffer = MsgFactory::serialize<command::TypeCommand::EchoResponse>(message);
 
-        for(auto const& user : users_) {
+        for(auto const& user : usersOnline_) {
             if (!user) {
                 continue;
             }
