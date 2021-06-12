@@ -61,4 +61,24 @@ namespace goodok::db {
         return result;
     }
 
+    bool WrapperPg::hasChannel(std::string const& channelName) const
+    {
+        return nameIdChannels_.contains(channelName);
+    }
+
+    type_id_user WrapperPg::createChannel(std::string const& channelName)
+    {
+        type_id_user id = {};
+        if (!hasChannel(channelName)) {
+            id = generator_.generate();
+            nameIdChannels_[channelName] = id;
+        }
+        return nameIdChannels_[channelName];
+    }
+
+    void WrapperPg::joinClientChannel(type_id_user client_id, std::string const& channel_name)
+    {
+        clientChannels_[client_id].push_back(channel_name);
+    }
+
 }

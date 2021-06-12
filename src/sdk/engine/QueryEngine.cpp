@@ -96,35 +96,23 @@ namespace goodok {
 
     void QueryEngine::joinRoom(Serialize::JoinRoomRequest const& request)
     {
-        if (!nameChannels_.contains(request.channel_name())) {
-            std::size_t id = ++counterId_;
-            nameChannels_.insert({request.channel_name(), std::make_shared<Channel>(request.channel_name(), id)});
+        if (!db_->hasChannel(request.channel_name())) {
+            auto channel_id = db_->createChannel(request.channel_name());
+            nameChannels_[request.channel_name()] = std::make_shared<Channel>(request.channel_name(), channel_id);
             log::write(log::Level::info, "QueryEngine",
-                       boost::format("generate new channel=%1%, id=%2%.") % request.channel_name() % id);
+                       boost::format("generate new channel=%1%, id=%2%.") % request.channel_name() % channel_id);
         }
 
-        if (auto it_channel = nameChannels_.find(request.channel_name()); it_channel!=nameChannels_.end()) {
-            std::size_t idClient = request.client_id();
-            if (auto it_id_client = idClients_.find(idClient); it_id_client != idClients_.end()) {
-                if (it_channel->second) {
-                    log::write(log::Level::info, "QueryEngine",
-                               boost::format("add new user=%1% to channel=%2%") % it_id_client->second->getName() % it_channel->second->getName());
-                    it_channel->second->addUser(it_id_client->second);
-                    clientChannels_[it_id_client->second->getId()].push_back(request.channel_name());
-
-                } else {
-                    log::write(log::Level::error, "QueryEngine",
-                               boost::format("failed joinRoom. do not find channel=%1% in engine") % request.channel_name());
-                }
-            } else {
-                log::write(log::Level::error, "QueryEngine",
-                           boost::format("failed joinRoom. do not fine client_id=%1% in engine") % request.client_id());
-            }
+        std::size_t client_id = request.client_id();
+        if (idClients_.contains(client_id)) {
+            auto channelPtr = nameChannels_[request.channel_name()];
+            auto clientPtr = idClients_[client_id];
+            channelPtr->addUser(clientPtr);
+            db_->joinClientChannel(client_id, request.channel_name());
         } else {
             log::write(log::Level::error, "QueryEngine",
-                       boost::format("failed joinRoom. channel_name=%1%") % request.channel_name());
+                       boost::format("failed joinRoom. do not find client_id=%1% in engine") % request.client_id());
         }
-
     }
 
     void QueryEngine::sendText(Serialize::TextRequest const& request)

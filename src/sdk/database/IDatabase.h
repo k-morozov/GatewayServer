@@ -11,7 +11,7 @@
 
 namespace goodok::db {
 
-    using type_id_user = std::size_t;
+    using type_id_user = std::size_t; // and channel id
 
     class IDatabase {
     public:
@@ -22,6 +22,9 @@ namespace goodok::db {
         virtual type_id_user checkRegUser(InputSettings const&) = 0;
         virtual type_id_user checkAuthUser(InputSettings const&) = 0;
         virtual std::deque<std::string> getUserNameChannels(type_id_user const&) = 0;
+        virtual bool hasChannel(std::string const&) const = 0;
+        virtual type_id_user createChannel(std::string const&) = 0;
+        virtual void joinClientChannel(type_id_user, std::string const&) = 0;
     };
 }
 

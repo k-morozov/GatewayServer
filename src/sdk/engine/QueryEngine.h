@@ -43,16 +43,9 @@ namespace goodok {
 
         std::unordered_map<db::type_id_user, userPtr> idClients_;
 
-
-
-        // @TODO boost::uid?
-        std::atomic<std::size_t> counterId_ = 0;
-
-//        std::unordered_map<db::type_id_user, userPtr> usersData_;
-
-        std::unordered_map<std::size_t, std::deque<std::string>> clientChannels_;
-
         std::unordered_map<std::string, channelPtr> nameChannels_;
+
+//        std::unordered_map<std::size_t, std::deque<std::string>> clientChannels_;
     };
 }
 

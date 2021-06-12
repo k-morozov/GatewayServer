@@ -38,11 +38,18 @@ namespace goodok::db {
         type_id_user checkAuthUser(InputSettings const&) override;
 
         std::deque<std::string> getUserNameChannels(type_id_user const&) override;
+
+        bool hasChannel(std::string const&) const override;
+
+        type_id_user createChannel(std::string const&) override;
+
+        void joinClientChannel(type_id_user, std::string const&) override;
     private:
         GeneratorId generator_;
         std::unordered_map<std::string, type_id_user> nameIdUsers_;
         std::unordered_map<type_id_user, InputSettings> nameSettingsUsers_;
         std::unordered_map<type_id_user, std::deque<std::string>> clientChannels_;
+        std::unordered_map<std::string, type_id_user> nameIdChannels_;
     };
 }
 
