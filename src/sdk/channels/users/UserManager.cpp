@@ -2,9 +2,18 @@
 // Created by focus on 12.06.2021.
 //
 
+#include "User.h"
 #include "UserManager.h"
+
 #include "sdk/common/log/Logger.h"
+#include "sdk/common/MakeSharedHelper.h"
+
 namespace goodok {
+
+    userPtr UserManager::create(UserSettings const& settings)
+    {
+        return std::make_shared<MakeSharedHelper<User>>(settings);
+    }
 
     void UserManager::push(db::type_id_user client_id, userPtr data) {
         if (idClients_.contains(client_id)) {

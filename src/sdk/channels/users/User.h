@@ -8,10 +8,11 @@
 #include "IUser.h"
 
 namespace goodok {
-    class User : public IUser {
-    public:
-        User(sessionWeakPtr const& sessionWeak, std::string const& name, std::string const& password);
 
+    class User : public IUser {
+    protected:
+        User(UserSettings const&);
+    public:
         void updateSession(sessionWeakPtr session) override { session_ = session; }
         sessionWeakPtr getSession() const override { return session_; }
         std::string getName() const override { return login_; }
@@ -28,6 +29,7 @@ namespace goodok {
         std::string password_;
         std::size_t id_ = 0;
     };
+
 }
 
 

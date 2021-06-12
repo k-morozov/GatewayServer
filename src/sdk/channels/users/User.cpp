@@ -6,10 +6,11 @@
 
 namespace goodok {
 
-    User::User(sessionWeakPtr const& sessionWeak, std::string const& name, std::string const& password) :
-        session_(sessionWeak),
-        login_(name),
-        password_(password)
+    User::User(UserSettings const& settings) :
+        session_(settings.sessionWeak),
+        login_(settings.name),
+        password_(settings.password),
+        id_(settings.id)
     {
 
     }

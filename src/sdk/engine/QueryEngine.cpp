@@ -9,19 +9,24 @@ namespace goodok {
 
     void QueryEngine::reg(sessionWeakPtr const& sessionWeak, Serialize::RegistrationRequest const& request)
     {
-        db::InputSettings settings{
+        db::InputSettings inputSettings{
             .clientName=request.login(),
             .clientPassword=request.password()
         };
-        auto client_id = db_->checkRegUser(settings);
+        auto client_id = db_->checkRegUser(inputSettings);
 
         if (client_id != db::REG_LOGIN_IS_BUSY) {
-            userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
-            userPtr->setId(client_id);
+            UserSettings userSettings {
+                .sessionWeak = sessionWeak,
+                .name = request.login(),
+                .password = request.password(),
+                .id = client_id
+            };
+            userPtr userPtr = UserManager::create(userSettings);
             manager_->push(client_id, userPtr);
 
             log::write(log::Level::info, "QueryEngine",
-                       boost::format("registration new user. login=%1%, client_id=%2%") % userPtr->getName() % userPtr->getId());
+                       boost::format("registration new user: login=%1%, client_id=%2%") % userPtr->getName() % userPtr->getId());
         } else {
             log::write(log::Level::warning, "QueryEngine",
                        boost::format("registration failed. user=%1% contains yet.") % request.login());
@@ -35,15 +40,20 @@ namespace goodok {
 
     void QueryEngine::auth(sessionWeakPtr const& sessionWeak, Serialize::AuthorisationRequest const& request)
     {
-        db::InputSettings settings{
+        db::InputSettings inputSettings{
                 .clientName=request.login(),
                 .clientPassword=request.password()
         };
-        auto client_id = db_->checkAuthUser(settings);
+        auto client_id = db_->checkAuthUser(inputSettings);
 
         if (client_id != db::AUTH_LOGIN_IS_NOT_AVAILABLE) {
-            userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
-            userPtr->setId(client_id);
+            UserSettings userSettings{
+                    .sessionWeak = sessionWeak,
+                    .name = request.login(),
+                    .password = request.password(),
+                    .id = client_id
+            };
+            userPtr userPtr = UserManager::create(userSettings);
             manager_->push(client_id, userPtr);
 
             log::write(log::Level::info, "QueryEngine",
