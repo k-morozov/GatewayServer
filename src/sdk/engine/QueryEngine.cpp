@@ -9,15 +9,10 @@ namespace goodok {
 
     void QueryEngine::reg(sessionWeakPtr const& sessionWeak, Serialize::RegistrationRequest const& request)
     {
-        std::size_t client_id = 0;
-        userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
+        auto client_id = db_->checkRegUser(request.login());
 
-        // @TODO here check in Db login
-//        db::ConnectSettings settings;
-//        db_->connect(settings);
-
-        if (auto it = usersData_.find(userPtr); it==usersData_.end()) {
-            client_id = ++counterId_;
+        if (client_id != db::REG_LOGIN_IS_BUSY) {
+            userPtr userPtr = std::make_shared<User>(sessionWeak, request.login(), request.password());
             userPtr->setId(client_id);
             usersData_.insert(userPtr);
             idClients_[userPtr->getId()] = userPtr;
@@ -25,7 +20,7 @@ namespace goodok {
                        boost::format("registration new user. login=%1%, client_id=%2%") % userPtr->getName() % userPtr->getId());
         } else {
             log::write(log::Level::warning, "QueryEngine",
-                       boost::format("registration failed. user=%1% contains yet.") % userPtr->getName());
+                       boost::format("registration failed. user=%1% contains yet.") % request.login());
         }
 
         if (auto session = sessionWeak.lock()) {

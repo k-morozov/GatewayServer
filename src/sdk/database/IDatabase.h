@@ -9,11 +9,15 @@
 
 namespace goodok::db {
 
+    using type_id_user = std::size_t;
+
     class IDatabase {
     public:
         virtual ~IDatabase() = default;
 
         virtual bool connect(ConnectSettings const&) = 0;
+
+        virtual type_id_user checkRegUser(std::string const&) = 0;
     };
 }
 
