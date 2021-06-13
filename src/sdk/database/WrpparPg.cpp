@@ -84,6 +84,24 @@ namespace goodok::db {
         return channel_name;
     }
 
+    std::string WrapperPg::getClientName(type_id_user client_id) const
+    {
+        std::string client_name;
+        if (isConnected) {
+            const std::string query = "SELECT login FROM clients WHERE id='" + std::to_string(client_id) + "';";
+            PGresult *res = PQexec(connection, query.c_str());
+            if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+                log::write(log::Level::error, "WrapperPg", boost::format("getClientName: %1%") % PQresultErrorMessage(res));
+            } else {
+                // @TODO many channels with EQ names?
+                client_name = PQntuples(res) ? PQgetvalue(res, 0, 0) : "";
+            }
+            PQclear(res);
+        }
+
+        return client_name;
+    }
+
 
     type_id_user WrapperPg::checkRegUser(InputSettings const& settings) {
         type_id_user client_id = LOGIN_IS_FREE;
@@ -215,7 +233,7 @@ namespace goodok::db {
             }
         } else {
             log::write(log::Level::error, "WrapperPg",
-                       boost::format("createChannel: channel_name=%1% is busy yet") % channel_name);
+                       boost::format("createChannel: channel_name=%1% is exist yet") % channel_name);
         }
 
         return channel_id;
@@ -298,24 +316,24 @@ namespace goodok::db {
         }
 
         const std::string channel_name = getChannelName(channel_id);
-        const std::string query = "SELECT channel_name FROM history WHERE channel_id=" + channel_name + ";";
+        const std::string query = "SELECT * FROM history WHERE channel_name='" + channel_name + "';";
         PGresult *res = PQexec(connection, query.c_str());
         if (PQresultStatus(res) == PGRES_TUPLES_OK) {
             for (int i = 0; i < PQntuples(res); i++) {
                 command::ClientTextMsg msg;
-                msg.author = getChannelId(PQgetvalue(res, i, 0));
+                msg.author = getClientName(std::stoi(PQgetvalue(res, i, 0)));
                 msg.channel_name = channel_name;
-                std::string dt = PQgetvalue(res, i, 1);
-                msg.text = PQgetvalue(res, i, 2);
+                std::string dt = PQgetvalue(res, i, 2);
+                msg.text = PQgetvalue(res, i, 3);
 
                 std::istringstream iss(dt);
                 std::tm tm;
                 iss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
                 msg.dt = tm;
 
-                BOOST_LOG_TRIVIAL(info) << "DB: " << msg.author << " " << msg.channel_name << " "
+                BOOST_LOG_TRIVIAL(info) << "DB: author=" << msg.author << ", channel=" << msg.channel_name << ", "
                                         << msg.dt.date.year << "." << msg.dt.date.month << "." << msg.dt.date.day << " "
-                                        << msg.dt.time.hours << ":" << msg.dt.time.minutes << " " << msg.text;
+                                        << msg.dt.time.hours << ":" << msg.dt.time.minutes << ", text=" << msg.text;
 
                 history.push_back(std::move(msg));
             }

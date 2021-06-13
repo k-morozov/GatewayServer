@@ -44,6 +44,8 @@ namespace goodok::db {
         void addMsgHistory(type_id_user, command::ClientTextMsg const&) override;
 
         std::deque<command::ClientTextMsg> getHistory(type_id_user) override;
+
+        type_id_user getChannelId(std::string const &channel_name) const override {}
     private:
         GeneratorId generator_;
         std::unordered_map<std::string, type_id_user> nameIdUsers_;

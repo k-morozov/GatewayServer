@@ -41,9 +41,12 @@ namespace goodok::db {
         PGconn *connection;
         bool isConnected = false;
 
+    public:
+        type_id_user getChannelId(std::string const &channel_name) const override;
     private:
         type_id_user getClientId(std::string const &client_name) const;
-        type_id_user getChannelId(std::string const &channel_name) const;
+
+        std::string getClientName(type_id_user) const;
         std::string getChannelName(type_id_user) const;
         bool hasChannelClient(type_id_user, type_id_user) const;
     };

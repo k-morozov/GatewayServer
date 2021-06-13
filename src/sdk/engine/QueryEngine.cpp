@@ -103,7 +103,7 @@ namespace goodok {
                    boost::format("get history, user=%1%, channel=%2%") % request.client_id() % request.channel_name());
         auto it_channel = nameChannels_.find(request.channel_name());
 
-        // проверить есть ли созданный канал, если нет - проверить, должны ли мы создать его?
+        // @TODO проверить есть ли созданный канал, если нет - проверить, должны ли мы создать его?
         if (it_channel != nameChannels_.end()) {
             if (it_channel->second) {
                 DateTime since = DateTime(
@@ -135,6 +135,13 @@ namespace goodok {
 
         if (auto session = clientPtr->getSession().lock()) {
             auto channels = db_->getUserNameChannels(request.client_id()); // lazy?
+            // @TODO создать каналы?
+            for(auto const& channel_name : channels) {
+                db::type_id_user channel_id = db_->getChannelId(channel_name);
+                nameChannels_[channel_name] = std::make_shared<Channel>(manager_, db_, channel_name, channel_id);
+                auto channelPtr = nameChannels_[channel_name];
+                channelPtr->addUser(clientPtr->getId());
+            }
             auto buffer = MsgFactory::serialize<command::TypeCommand::ChannelsResponse>(channels);
             session->write(buffer);
         }
