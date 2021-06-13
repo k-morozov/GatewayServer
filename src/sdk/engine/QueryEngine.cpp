@@ -122,6 +122,8 @@ namespace goodok {
 
     void QueryEngine::getChannels(Serialize::ChannelsRequest const& request)
     {
+        log::write(log::Level::info, "QueryEngine",
+                   boost::format("get channels, client_id=%1%") % request.client_id());
         auto clientPtr = manager_->getUser(request.client_id());
         if (!clientPtr) {
             log::write(log::Level::error, "QueryEngine::getChannels",

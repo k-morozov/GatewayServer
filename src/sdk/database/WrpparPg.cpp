@@ -110,9 +110,43 @@ namespace goodok::db {
         return client_id;
     }
 
-    std::deque<std::string> WrapperPg::getUserNameChannels(type_id_user const&) {}
+    std::deque<std::string> WrapperPg::getUserNameChannels(type_id_user const& client_id) {
+        std::deque<std::string> channels;
+        if (!isConnected) {
+            log::write(log::Level::warning, "WrapperPg", "no connect to db");
+            return channels;
+        }
+        const std::string query = "SELECT channel_name FROM history WHERE client_id=" + std::to_string(client_id) + ";";
+        PGresult *res = PQexec(connection, query.c_str());
+        if (PQresultStatus(res) == PGRES_TUPLES_OK) {
+            for(int i=0; i < PQntuples(res); ++i) {
+                channels.emplace_back(PQgetvalue(res, i, 0));
+            }
+        } else {
+            log::write(log::Level::error, "WrapperPg", boost::format("getUserNameChannels: %1%") % PQresultErrorMessage(res));
+        }
+        PQclear(res);
+        return channels;
+    }
 
-    bool WrapperPg::hasChannel(std::string const&) const {}
+    bool WrapperPg::hasChannel(std::string const& channelName) const {
+        bool result = false;
+        if (!isConnected) {
+            log::write(log::Level::warning, "WrapperPg", "no connect to db");
+            return result;
+        }
+
+        const std::string query = "SELECT channel_name FROM history WHERE channel_name=" + channelName + ";";
+        PGresult *res = PQexec(connection, query.c_str());
+        if (PQresultStatus(res) == PGRES_TUPLES_OK) {
+            result = PQntuples(res) > 0;
+        } else {
+            log::write(log::Level::error, "WrapperPg", boost::format("hasChannel: %1%") % PQresultErrorMessage(res));
+        }
+        PQclear(res);
+
+        return result;
+    }
 
     type_id_user WrapperPg::createChannel(std::string const&) {}
 

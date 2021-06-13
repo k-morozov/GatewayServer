@@ -21,12 +21,13 @@ namespace goodok::db {
         type_id_user checkRegUser(InputSettings const&) override;
 
         type_id_user checkAuthUser(InputSettings const&) override;
-// *********************************************************************************************
-
 
         std::deque<std::string> getUserNameChannels(type_id_user const&) override;
 
         bool hasChannel(std::string const&) const override;
+// *********************************************************************************************
+
+
 
         type_id_user createChannel(std::string const&) override;
 

@@ -36,6 +36,8 @@ namespace goodok {
     userPtr UserManager::getUser(db::type_id_user client_id) {
         if (auto it=idClients_.find(client_id); it!=idClients_.end()) {
             if (it->second) {
+                log::write(log::Level::info, "UserManager::getUser",
+                           boost::format("successfully found user with client_id=%1%") % client_id);
                 return it->second;
             } else {
                 log::write(log::Level::error, "UserManager::getUser",
