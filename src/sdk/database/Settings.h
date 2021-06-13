@@ -9,7 +9,7 @@
 
 namespace goodok::db {
     struct ConnectSettings {
-        std::string user = "worker";
+        std::string user = "postgres";
         std::string password = "123";
         std::string host = "127.0.0.1";
         std::string db = "chat";

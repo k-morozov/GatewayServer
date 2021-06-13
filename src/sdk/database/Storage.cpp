@@ -9,7 +9,7 @@ namespace goodok::db {
 
     bool Storage::connect(ConnectSettings const&) {
         log::write(log::Level::info, "Storage",
-                   "without connect");
+                   "without network connect");
         return true;
     }
 

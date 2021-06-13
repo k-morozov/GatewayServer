@@ -12,10 +12,6 @@
 
 namespace goodok::db {
 
-    constexpr type_id_user REG_LOGIN_IS_BUSY = 0;
-    constexpr type_id_user AUTH_LOGIN_IS_NOT_AVAILABLE = 0;
-    constexpr type_id_user AUTH_WRONG_PASSWORD = 0;
-
     class GeneratorId {
     public:
         GeneratorId() = default;

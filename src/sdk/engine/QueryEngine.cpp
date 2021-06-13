@@ -3,13 +3,15 @@
 //
 
 #include "QueryEngine.h"
+
 #include "sdk/channels/users/User.h"
+#include "sdk/database/WrapperPg.h"
 
 namespace goodok {
 
     QueryEngine::QueryEngine(std::shared_ptr<UserManager> manager) :
         manager_(std::move(manager)),
-        db_(std::make_shared<db::Storage>())
+        db_(std::make_shared<db::WrapperPg>())
     {
         if (!manager_) {
             throw std::invalid_argument("manager pointer is nullptr");
@@ -19,7 +21,20 @@ namespace goodok {
         }
 
         db::ConnectSettings settings;
-        db_->connect(settings);
+        if (db_->connect(settings)) {
+            log::write(log::Level::info, "QueryEngine",
+                       "connect to pgsql successfully");
+        } else {
+            log::write(log::Level::error, "QueryEngine",
+                       "failed connect to pgsql");
+            db_ = std::make_shared<db::Storage>();
+            if (db_->connect(settings)) {
+                log::write(log::Level::info, "QueryEngine",
+                           "connect to storage successfully");
+            } else {
+                throw std::invalid_argument("failed init database/storage");
+            }
+        }
     }
 
     void QueryEngine::reg(sessionWeakPtr const& sessionWeak, Serialize::RegistrationRequest const& request)
