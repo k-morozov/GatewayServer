@@ -19,10 +19,10 @@ namespace goodok::db {
         bool connect(ConnectSettings const&) override;
 
         type_id_user checkRegUser(InputSettings const&) override;
-// *********************************************************************************************
-
 
         type_id_user checkAuthUser(InputSettings const&) override;
+// *********************************************************************************************
+
 
         std::deque<std::string> getUserNameChannels(type_id_user const&) override;
 

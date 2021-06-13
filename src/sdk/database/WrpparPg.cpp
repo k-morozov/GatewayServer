@@ -78,7 +78,37 @@ namespace goodok::db {
         return client_id;
     }
 
-    type_id_user WrapperPg::checkAuthUser(InputSettings const&) {}
+    type_id_user WrapperPg::checkAuthUser(InputSettings const& settings) {
+        type_id_user client_id = AUTH_LOGIN_IS_NOT_AVAILABLE;
+        if (!isConnected) {
+            log::write(log::Level::warning, "WrapperPg", "no connect to db");
+            return client_id;
+        }
+
+        const std::string query = "SELECT id, password FROM clients WHERE login='" + settings.clientName + "';";
+        PGresult *res = PQexec(connection, query.c_str());
+        if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+            log::write(log::Level::error, "WrapperPg",
+                       boost::format("checkAuthUser: login=%1% not found in db") % settings.clientName);
+        } else {
+            if (PQntuples(res)) {
+                if (settings.clientPassword == PQgetvalue(res, 0, 1)) {
+                    client_id = std::stoi(PQgetvalue(res, 0, 0));
+                    log::write(log::Level::info, "WrapperPg",
+                               boost::format("checkAuthUser: successful find id = %1% for login=%2% in db")
+                               % client_id % settings.clientName);
+                } else {
+                    log::write(log::Level::info, "WrapperPg",
+                               boost::format("checkAuthUser: login=%1% incorrect password") % settings.clientName);
+                }
+
+            } else {
+                client_id = AUTH_LOGIN_IS_NOT_AVAILABLE;
+            }
+        }
+        PQclear(res);
+        return client_id;
+    }
 
     std::deque<std::string> WrapperPg::getUserNameChannels(type_id_user const&) {}
 
