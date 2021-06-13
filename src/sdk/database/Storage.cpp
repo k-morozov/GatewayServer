@@ -2,18 +2,18 @@
 // Created by focus on 12.06.2021.
 //
 
-#include "WrapperPg.h"
+#include "Storage.h"
 #include "log/Logger.h"
 
 namespace goodok::db {
 
-    bool WrapperPg::connect(ConnectSettings const& settings) {
-        log::write(log::Level::info, "WrapperPg",
-                   boost::format("start connect to %1%") % settings.host);
+    bool Storage::connect(ConnectSettings const&) {
+        log::write(log::Level::info, "Storage",
+                   "without connect");
         return true;
     }
 
-    type_id_user WrapperPg::checkRegUser(InputSettings const& settings)
+    type_id_user Storage::checkRegUser(InputSettings const& settings)
     {
         type_id_user id = REG_LOGIN_IS_BUSY;
         if (!nameIdUsers_.contains(settings.clientName)) {
@@ -24,7 +24,7 @@ namespace goodok::db {
         return id;
     }
 
-    type_id_user WrapperPg::checkAuthUser(InputSettings const& settings)
+    type_id_user Storage::checkAuthUser(InputSettings const& settings)
     {
         type_id_user id = AUTH_LOGIN_IS_NOT_AVAILABLE;
         if (nameIdUsers_.contains(settings.clientName)) {
@@ -48,7 +48,7 @@ namespace goodok::db {
         return id;
     }
 
-    std::deque<std::string> WrapperPg::getUserNameChannels(type_id_user const& client_id)
+    std::deque<std::string> Storage::getUserNameChannels(type_id_user const& client_id)
     {
         std::deque<std::string> result;
         if (auto it = clientChannels_.find(client_id); it != clientChannels_.end()) {
@@ -61,12 +61,12 @@ namespace goodok::db {
         return result;
     }
 
-    bool WrapperPg::hasChannel(std::string const& channelName) const
+    bool Storage::hasChannel(std::string const& channelName) const
     {
         return nameIdChannels_.contains(channelName);
     }
 
-    type_id_user WrapperPg::createChannel(std::string const& channelName)
+    type_id_user Storage::createChannel(std::string const& channelName)
     {
         type_id_user id = {};
         if (!hasChannel(channelName)) {
@@ -76,17 +76,17 @@ namespace goodok::db {
         return nameIdChannels_[channelName];
     }
 
-    void WrapperPg::joinClientChannel(type_id_user client_id, std::string const& channel_name)
+    void Storage::joinClientChannel(type_id_user client_id, std::string const& channel_name)
     {
         clientChannels_[client_id].push_back(channel_name);
     }
 
-    void WrapperPg::addMsgHistory(type_id_user channel_id, command::ClientTextMsg const& msg)
+    void Storage::addMsgHistory(type_id_user channel_id, command::ClientTextMsg const& msg)
     {
         history_[channel_id].push_back(msg);
     }
 
-    std::deque<command::ClientTextMsg> WrapperPg::getHistory(type_id_user channel_id)
+    std::deque<command::ClientTextMsg> Storage::getHistory(type_id_user channel_id)
     {
         std::deque<command::ClientTextMsg> result;
         if (auto it = history_.find(channel_id); it != history_.end()) {

@@ -9,7 +9,7 @@ namespace goodok {
 
     QueryEngine::QueryEngine(std::shared_ptr<UserManager> manager) :
         manager_(std::move(manager)),
-        db_(std::make_shared<db::WrapperPg>())
+        db_(std::make_shared<db::Storage>())
     {
         if (!manager_) {
             throw std::invalid_argument("manager pointer is nullptr");
@@ -17,6 +17,9 @@ namespace goodok {
         if (!db_) {
             throw std::invalid_argument("database pointer is nullptr");
         }
+
+        db::ConnectSettings settings;
+        db_->connect(settings);
     }
 
     void QueryEngine::reg(sessionWeakPtr const& sessionWeak, Serialize::RegistrationRequest const& request)

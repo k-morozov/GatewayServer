@@ -12,7 +12,7 @@
 #include "sdk/channels/users/UserManager.h"
 #include "sdk/channels/Channel.h"
 #include "sdk/common/log/Logger.h"
-#include "sdk/database/WrapperPg.h"
+#include "sdk/database/Storage.h"
 
 #include <unordered_set>
 
