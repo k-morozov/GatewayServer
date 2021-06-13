@@ -36,6 +36,7 @@ namespace goodok::db {
             const std::string query = "SELECT id FROM clients WHERE login='" + client_name + "';";
             PGresult *res = PQexec(connection, query.c_str());
             if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+                log::write(log::Level::error, "WrapperPg", boost::format("getClientId: %1%") % PQresultErrorMessage(res));
             } else {
                 client_id = PQntuples(res) ? std::stoi(PQgetvalue(res, 0, 0)) : 0;
             }
@@ -43,6 +44,24 @@ namespace goodok::db {
         }
 
         return client_id;
+    }
+
+    type_id_user WrapperPg::getChannelId(std::string const &channel_name) const
+    {
+        type_id_user channel_id = LOGIN_IS_FREE;
+        if (isConnected) {
+            const std::string query = "SELECT id FROM channels WHERE channel_name='" + channel_name + "';";
+            PGresult *res = PQexec(connection, query.c_str());
+            if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+                log::write(log::Level::error, "WrapperPg", boost::format("getChannelId: %1%") % PQresultErrorMessage(res));
+            } else {
+                // @TODO many channels with EQ names?
+                channel_id = PQntuples(res) ? std::stoi(PQgetvalue(res, 0, 0)) : 0;
+            }
+            PQclear(res);
+        }
+
+        return channel_id;
     }
 
 
@@ -136,7 +155,7 @@ namespace goodok::db {
             return result;
         }
 
-        const std::string query = "SELECT channel_name FROM history WHERE channel_name=" + channelName + ";";
+        const std::string query = "SELECT channel_name FROM history WHERE channel_name='" + channelName + "';";
         PGresult *res = PQexec(connection, query.c_str());
         if (PQresultStatus(res) == PGRES_TUPLES_OK) {
             result = PQntuples(res) > 0;
@@ -155,29 +174,30 @@ namespace goodok::db {
             return channel_id;
         }
 
-//        if (getClientId(settings.clientName) == LOGIN_IS_FREE) {
-//            const std::string query =
-//                    "INSERT INTO clients(login, password) VALUES ('" + settings.clientName + "', '" + settings.clientPassword +"');";
-//            PGresult * res = PQexec(connection, query.c_str());
-//            if (PQresultStatus(res) == PGRES_COMMAND_OK) {
-//                log::write(log::Level::info, "WrapperPg",
-//                           boost::format("checkRegUser: add login=%1% to db.") % settings.clientName);
-//            } else {
-//                log::write(log::Level::error, "WrapperPg",
-//                           boost::format("checkRegUser: failed push login=%1% to db. %2%") % settings.clientName % PQresultErrorMessage(res));
-//            }
-//            PQclear(res);
-//            client_id = getClientId(settings.clientName);
-//            if (client_id == LOGIN_IS_FREE) {
-//                log::write(log::Level::error, "WrapperPg",
-//                           boost::format("checkRegUser: failed get login=%1% from db") % settings.clientName);
-//            }
-//        } else {
-//            log::write(log::Level::error, "WrapperPg",
-//                       boost::format("checkRegUser: login=%1% is busy yet") % settings.clientName);
-//        }
-//
-//        return client_id;
+        channel_id = getChannelId(channel_name);
+        if (channel_id == LOGIN_IS_FREE) {
+            const std::string query =
+                    "INSERT INTO channels(channel_name) VALUES ('" + channel_name + "');";
+            PGresult * res = PQexec(connection, query.c_str());
+            if (PQresultStatus(res) == PGRES_COMMAND_OK) {
+                log::write(log::Level::info, "WrapperPg",
+                           boost::format("createChannel: add channel_name=%1% to db.") % channel_name);
+            } else {
+                log::write(log::Level::error, "WrapperPg",
+                           boost::format("createChannel: failed push login=%1% to db. %2%") % channel_name % PQresultErrorMessage(res));
+            }
+            PQclear(res);
+            channel_id = getChannelId(channel_name);
+            if (channel_id == LOGIN_IS_FREE) {
+                log::write(log::Level::error, "WrapperPg",
+                           boost::format("createChannel: failed get login=%1% from db") % channel_name);
+            }
+        } else {
+            log::write(log::Level::error, "WrapperPg",
+                       boost::format("createChannel: channel_name=%1% is busy yet") % channel_name);
+        }
+
+        return channel_id;
 
     }
 

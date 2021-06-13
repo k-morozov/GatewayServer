@@ -43,6 +43,7 @@ namespace goodok::db {
 
     private:
         type_id_user getClientId(std::string const &client_name) const;
+        type_id_user getChannelId(std::string const &channel_name) const;
     };
 
 }
