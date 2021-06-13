@@ -29,7 +29,7 @@ namespace goodok::db {
         return isConnected;
     }
 
-    type_id_user WrapperPg::getId(std::string const& client_name) const
+    type_id_user WrapperPg::getClientId(std::string const& client_name) const
     {
         type_id_user client_id = REG_LOGIN_IS_BUSY;
         if (isConnected) {
@@ -53,7 +53,7 @@ namespace goodok::db {
             return client_id;
         }
 
-        if (getId(settings.clientName) == LOGIN_IS_FREE) {
+        if (getClientId(settings.clientName) == LOGIN_IS_FREE) {
             const std::string query =
                     "INSERT INTO clients(login, password) VALUES ('" + settings.clientName + "', '" + settings.clientPassword +"');";
             PGresult * res = PQexec(connection, query.c_str());
@@ -65,7 +65,7 @@ namespace goodok::db {
                            boost::format("checkRegUser: failed push login=%1% to db. %2%") % settings.clientName % PQresultErrorMessage(res));
             }
             PQclear(res);
-            client_id = getId(settings.clientName);
+            client_id = getClientId(settings.clientName);
             if (client_id == LOGIN_IS_FREE) {
                 log::write(log::Level::error, "WrapperPg",
                            boost::format("checkRegUser: failed get login=%1% from db") % settings.clientName);
@@ -148,7 +148,38 @@ namespace goodok::db {
         return result;
     }
 
-    type_id_user WrapperPg::createChannel(std::string const&) {}
+    type_id_user WrapperPg::createChannel(std::string const& channel_name) {
+        type_id_user channel_id = LOGIN_IS_FREE;
+        if (!isConnected) {
+            log::write(log::Level::warning, "WrapperPg", "no connect to db");
+            return channel_id;
+        }
+
+//        if (getClientId(settings.clientName) == LOGIN_IS_FREE) {
+//            const std::string query =
+//                    "INSERT INTO clients(login, password) VALUES ('" + settings.clientName + "', '" + settings.clientPassword +"');";
+//            PGresult * res = PQexec(connection, query.c_str());
+//            if (PQresultStatus(res) == PGRES_COMMAND_OK) {
+//                log::write(log::Level::info, "WrapperPg",
+//                           boost::format("checkRegUser: add login=%1% to db.") % settings.clientName);
+//            } else {
+//                log::write(log::Level::error, "WrapperPg",
+//                           boost::format("checkRegUser: failed push login=%1% to db. %2%") % settings.clientName % PQresultErrorMessage(res));
+//            }
+//            PQclear(res);
+//            client_id = getClientId(settings.clientName);
+//            if (client_id == LOGIN_IS_FREE) {
+//                log::write(log::Level::error, "WrapperPg",
+//                           boost::format("checkRegUser: failed get login=%1% from db") % settings.clientName);
+//            }
+//        } else {
+//            log::write(log::Level::error, "WrapperPg",
+//                       boost::format("checkRegUser: login=%1% is busy yet") % settings.clientName);
+//        }
+//
+//        return client_id;
+
+    }
 
     void WrapperPg::joinClientChannel(type_id_user, std::string const&) {}
 

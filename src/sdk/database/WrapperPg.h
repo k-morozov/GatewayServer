@@ -14,7 +14,7 @@ namespace goodok::db {
     class WrapperPg : public IDatabase {
     public:
         WrapperPg() = default;
-        ~WrapperPg() = default;
+        ~WrapperPg() override = default;
 
         bool connect(ConnectSettings const&) override;
 
@@ -25,13 +25,14 @@ namespace goodok::db {
         std::deque<std::string> getUserNameChannels(type_id_user const&) override;
 
         bool hasChannel(std::string const&) const override;
-// *********************************************************************************************
-
-
 
         type_id_user createChannel(std::string const&) override;
 
         void joinClientChannel(type_id_user, std::string const&) override;
+
+// *********************************************************************************************
+
+
 
         void addMsgHistory(type_id_user, command::ClientTextMsg const&) override;
 
@@ -41,7 +42,7 @@ namespace goodok::db {
         bool isConnected = false;
 
     private:
-        type_id_user getId(std::string const&) const;
+        type_id_user getClientId(std::string const &client_name) const;
     };
 
 }
