@@ -6,6 +6,8 @@
 
 #include "sdk/common/log/Logger.h"
 
+#include <iomanip>
+
 namespace goodok::db {
 
     bool WrapperPg::connect(ConnectSettings const& setting)
@@ -62,6 +64,24 @@ namespace goodok::db {
         }
 
         return channel_id;
+    }
+
+    std::string WrapperPg::getChannelName(type_id_user channel_id) const
+    {
+        std::string channel_name;
+        if (isConnected) {
+            const std::string query = "SELECT channel_name FROM channels WHERE id='" + std::to_string(channel_id) + "';";
+            PGresult *res = PQexec(connection, query.c_str());
+            if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+                log::write(log::Level::error, "WrapperPg", boost::format("getChannelName: %1%") % PQresultErrorMessage(res));
+            } else {
+                // @TODO many channels with EQ names?
+                channel_name = PQntuples(res) ? PQgetvalue(res, 0, 0) : "";
+            }
+            PQclear(res);
+        }
+
+        return channel_name;
     }
 
 
@@ -139,6 +159,7 @@ namespace goodok::db {
         PGresult *res = PQexec(connection, query.c_str());
         if (PQresultStatus(res) == PGRES_TUPLES_OK) {
             for(int i=0; i < PQntuples(res); ++i) {
+                log::write(log::Level::debug, "WrapperPg", boost::format("channel: %1%") % PQgetvalue(res, i, 0));
                 channels.emplace_back(PQgetvalue(res, i, 0));
             }
         } else {
@@ -201,10 +222,109 @@ namespace goodok::db {
 
     }
 
-    void WrapperPg::joinClientChannel(type_id_user, std::string const&) {}
+    bool WrapperPg::hasChannelClient(type_id_user channel_id, type_id_user client_id) const
+    {
+        bool result = false;
+        if (!isConnected) {
+            log::write(log::Level::warning, "WrapperPg", "no connect to db");
+            return result;
+        }
+        const std::string query = "SELECT * FROM subscriptions WHERE client_id='"
+                + std::to_string(client_id)
+                + "' AND channel_id='"
+                + std::to_string(channel_id) + "';";
+        PGresult * res = PQexec(connection, query.c_str());
+        if (PQresultStatus(res) == PGRES_TUPLES_OK) {
+            result = PQntuples(res) > 0;
+        } else {
+            log::write(log::Level::error, "WrapperPg", boost::format("hasChannelClient: %1%") % PQresultErrorMessage(res));
+        }
+        PQclear(res);
+        return result;
+    }
 
-    void WrapperPg::addMsgHistory(type_id_user, command::ClientTextMsg const&) {}
+    void WrapperPg::joinClientChannel(type_id_user client_id, std::string const& channel_name) {
+        if (!isConnected) {
+            log::write(log::Level::warning, "WrapperPg", "no connect to db");
+            return;
+        }
+        type_id_user channel_id = getChannelId(channel_name);
+        if (hasChannelClient(channel_id, client_id)) {
+            return;
+        }
+        const std::string query = "INSERT INTO subscriptions VALUES(" + std::to_string(client_id) + ", " + std::to_string(channel_id) + ");";
+        PGresult * res = PQexec(connection, query.c_str());
+        if (PQresultStatus(res) == PGRES_COMMAND_OK) {
+            log::write(log::Level::info, "WrapperPg", boost::format("joinClientChannel: successfully add client_id=%1% to channel=")
+                % client_id % channel_name);
+        } else {
+            log::write(log::Level::error, "WrapperPg", boost::format("joinClientChannel: %1%") % PQresultErrorMessage(res));
+        }
+        PQclear(res);
+    }
 
-    std::deque<command::ClientTextMsg> WrapperPg::getHistory(type_id_user) {}
+    void WrapperPg::addMsgHistory(type_id_user channel_id, command::ClientTextMsg const& message) {
+        PGresult *res;
+        std::stringstream ss;
+        ss << std::setfill('0') << std::setw(4) << message.dt.date.year << "-"
+           << std::setfill('0') << std::setw(2) << message.dt.date.month << "-"
+           << std::setfill('0') << std::setw(2) << message.dt.date.day << " "
+           << std::setfill('0') << std::setw(2) << message.dt.time.hours << ":"
+           << std::setfill('0') << std::setw(2) << message.dt.time.minutes << ":"
+           << std::setfill('0') << std::setw(2) << message.dt.time.seconds;
+
+        const std::string query =
+                "insert into history(client_id, channel_name, datetime, message) "
+                "values (" + std::to_string(getClientId(message.author)) + ", '"
+                + message.channel_name + "', '"
+                + ss.str() + "', '"
+                + message.text + "');";
+        res = PQexec(connection, query.c_str());
+        if (PQresultStatus(res) != PGRES_COMMAND_OK) {
+            log::write(log::Level::error, "WrapperPg", boost::format("addMsgHistory: %1%") % PQresultErrorMessage(res));
+        } else {
+            log::write(log::Level::info, "WrapperPg",
+                       boost::format("addMsgHistory: successfully add msg to channel_name=%1% to db") % message.channel_name);
+        }
+        PQclear(res);
+    }
+
+    std::deque<command::ClientTextMsg> WrapperPg::getHistory(type_id_user channel_id) {
+        std::deque<command::ClientTextMsg> history;
+
+        if (!isConnected) {
+            log::write(log::Level::warning, "WrapperPg", "no connect to db");
+            return history;
+        }
+
+        const std::string channel_name = getChannelName(channel_id);
+        const std::string query = "SELECT channel_name FROM history WHERE channel_id=" + channel_name + ";";
+        PGresult *res = PQexec(connection, query.c_str());
+        if (PQresultStatus(res) == PGRES_TUPLES_OK) {
+            for (int i = 0; i < PQntuples(res); i++) {
+                command::ClientTextMsg msg;
+                msg.author = getChannelId(PQgetvalue(res, i, 0));
+                msg.channel_name = channel_name;
+                std::string dt = PQgetvalue(res, i, 1);
+                msg.text = PQgetvalue(res, i, 2);
+
+                std::istringstream iss(dt);
+                std::tm tm;
+                iss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+                msg.dt = tm;
+
+                BOOST_LOG_TRIVIAL(info) << "DB: " << msg.author << " " << msg.channel_name << " "
+                                        << msg.dt.date.year << "." << msg.dt.date.month << "." << msg.dt.date.day << " "
+                                        << msg.dt.time.hours << ":" << msg.dt.time.minutes << " " << msg.text;
+
+                history.push_back(std::move(msg));
+            }
+        } else {
+            log::write(log::Level::error, "WrapperPg", boost::format("getHistory: %1%") % PQresultErrorMessage(res));
+        }
+        PQclear(res);
+
+        return history;
+    }
 
 }

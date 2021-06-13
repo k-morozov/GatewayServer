@@ -102,6 +102,8 @@ namespace goodok {
         log::write(log::Level::info, "QueryEngine",
                    boost::format("get history, user=%1%, channel=%2%") % request.client_id() % request.channel_name());
         auto it_channel = nameChannels_.find(request.channel_name());
+
+        // проверить есть ли созданный канал, если нет - проверить, должны ли мы создать его?
         if (it_channel != nameChannels_.end()) {
             if (it_channel->second) {
                 DateTime since = DateTime(
