@@ -72,6 +72,7 @@ namespace goodok {
 
         private:
             void writeImpl_();
+            mutable std::mutex mutex_;
         };
     }
 

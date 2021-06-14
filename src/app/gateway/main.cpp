@@ -10,9 +10,9 @@
 #include "sdk/context/AsyncContext.h"
 #include "sdk/network/AcceptProcess.h"
 #include "sdk/network/session/ClientSession.h"
+#include "sdk/database/WrapperPg.h"
 
 #include <boost/program_options.hpp>
-
 #include <iostream>
 
 constexpr const char* userOpt = "name";
@@ -60,8 +60,13 @@ int main(int argc, char *argv[])
         auto params = setParameters(argc, argv);
         goodok::log::configure(goodok::log::Level::debug);
 
+        std::shared_ptr<goodok::db::IDatabase> db = std::make_shared<goodok::db::WrapperPg>();
+        auto managerUsers = std::make_shared<goodok::UserManager>();
+        auto managerChannels = std::make_shared<goodok::ChannelsManager>(managerUsers, db);
+
+        goodok::enginePtr engine = std::make_shared<goodok::QueryEngine>(managerUsers, managerChannels, db);
+
         auto ctx = std::make_shared<goodok::AsyncContext>();
-        goodok::enginePtr engine = std::make_shared<goodok::QueryEngine>();
 
         using AcceptType = goodok::AcceptProcess<goodok::ClientSession>;
         auto nwk = std::make_shared<MakeSharedHelper<AcceptType>>(ctx, engine, 7777);

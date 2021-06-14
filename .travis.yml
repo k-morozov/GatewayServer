@@ -14,6 +14,7 @@ matrix:
             - python3-pip
             - cmake
             - wget
+            - libpq-dev
       env:
         - MATRIX_EVAL="CXX=g++-10"
         - BUILD_DIR=build
@@ -21,7 +22,6 @@ matrix:
       before_install:
         - eval "${MATRIX_EVAL}"
       before_script:
-#        - apt-get install g++-10
         - pip install --upgrade pip
         - pip install conan
         - source ~/.profile

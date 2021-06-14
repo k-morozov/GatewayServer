@@ -6,6 +6,7 @@
 #define GOODOK_SERVERS_IUSER_H
 
 #include "sdk/network/session/ISession.h"
+#include "sdk/database/IDatabase.h"
 
 namespace goodok {
 
@@ -13,6 +14,12 @@ namespace goodok {
     using userPtr = std::shared_ptr<IUser>;
     using userWeakPtr = std::weak_ptr<IUser>;
 
+    struct UserSettings {
+        sessionWeakPtr sessionWeak;
+        std::string name;
+        std::string password;
+        db::type_id_user id;
+    };
 
     class IUser {
     public:

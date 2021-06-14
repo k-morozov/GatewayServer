@@ -24,7 +24,10 @@ namespace goodok {
             processWrite = !bufferWrite_.empty();
 //            detail::buffer_t data = MsgFactory::serialize<command::TypeCommand::AuthorisationResponse>(1);
 
+            // @TODO data race!!!
+            mutex_.lock();
             bufferWrite_.push_back(std::move(data));
+            mutex_.unlock();
             if (!processWrite) {
                 writeImpl_();
             }
@@ -34,9 +37,11 @@ namespace goodok {
             if (auto socket = socketWeak_.lock()) {
                 auto callback = [selfWeak = weak_from_this()](boost::system::error_code, std::size_t)
                 {
-                    log::write(log::Level::info, "writeImpl_", "send");
+                    log::write(log::Level::info, "writeImpl_", "send response");
                     if (auto self = selfWeak.lock()) {
+                        self->mutex_.lock();
                         self->bufferWrite_.pop_front();
+                        self->mutex_.unlock();
                         if (!self->bufferWrite_.empty()) {
                             self->writeImpl_();
                         }
@@ -104,12 +109,12 @@ namespace goodok {
 
         reenter(coroData_.coro_) for(;;)
         {
-            log::write(log::Level::debug, "ClientSession", "read header");
+            log::write(log::Level::trace, "ClientSession", "read header");
             yield boost::asio::async_read(*socket_,
                                           boost::asio::buffer(coroData_.bufferHeader_.data(), detail::MAX_SIZE_HEADER_BUFFER),
                                           callback);
 
-            log::write(log::Level::debug, "ClientSession", "read body");
+            log::write(log::Level::trace, "ClientSession", "read body");
 
             coroData_.header.ParseFromArray(coroData_.bufferHeader_.data(), detail::MAX_SIZE_HEADER_BUFFER);
 

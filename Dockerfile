@@ -7,6 +7,7 @@ RUN apt-get update && \
         build-essential make autoconf cmake git pkg-config \
         automake libtool curl unzip \
         gcc-10 g++-10 \
+        libpq-dev \
         python3-pip && \
         apt-get clean && \
         pip3 install conan
