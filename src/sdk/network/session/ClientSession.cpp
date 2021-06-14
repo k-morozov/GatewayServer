@@ -24,7 +24,10 @@ namespace goodok {
             processWrite = !bufferWrite_.empty();
 //            detail::buffer_t data = MsgFactory::serialize<command::TypeCommand::AuthorisationResponse>(1);
 
+            // @TODO data race!!!
+            mutex_.lock();
             bufferWrite_.push_back(std::move(data));
+            mutex_.unlock();
             if (!processWrite) {
                 writeImpl_();
             }
@@ -36,7 +39,9 @@ namespace goodok {
                 {
                     log::write(log::Level::info, "writeImpl_", "send response");
                     if (auto self = selfWeak.lock()) {
+                        self->mutex_.lock();
                         self->bufferWrite_.pop_front();
+                        self->mutex_.unlock();
                         if (!self->bufferWrite_.empty()) {
                             self->writeImpl_();
                         }

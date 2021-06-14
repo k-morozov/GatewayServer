@@ -20,6 +20,22 @@ namespace goodok {
         if (id == 0) {
             throw std::invalid_argument("Channel: id equal zero");
         }
+
+        if (auto db = db_.lock()) {
+            auto users_id = db->getChannelUsers(id_);
+
+            if (users_id.empty()) {
+                log::write(log::Level::warning, boost::format("Channel=%1%") % name_,
+                           "no users in db");
+            }
+            for(auto const& user_id : users_id) {
+                log::write(log::Level::debug, boost::format("Channel=%1%") % name_,
+                           boost::format("add user: client_id=%1%") % user_id);
+                idUsers_.insert(user_id);
+            }
+        }
+        log::write(log::Level::debug, boost::format("Channel=%1%") % name_,
+                   "created");
     }
 
     void Channel::addUser(db::type_id_user client_id)
@@ -33,7 +49,7 @@ namespace goodok {
                 return;
             }
 
-            log::write(log::Level::error, boost::format("Channel=%1%") % name_,
+            log::write(log::Level::info, boost::format("Channel=%1%") % name_,
                        boost::format("add user: name=%1%, id=%2%") % user->getName() % user->getId());
 
             if (auto session = user->getSession().lock()) {

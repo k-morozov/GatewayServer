@@ -35,6 +35,8 @@ namespace goodok::db {
 
         std::deque<std::string> getUserNameChannels(type_id_user const&) override;
 
+        std::vector<type_id_user> getChannelUsers(type_id_user const&) const override {};
+
         bool hasChannel(std::string const&) const override;
 
         type_id_user createChannel(std::string const&) override;
@@ -46,6 +48,7 @@ namespace goodok::db {
         std::deque<command::ClientTextMsg> getHistory(type_id_user) override;
 
         type_id_user getChannelId(std::string const &channel_name) const override {}
+        std::unordered_map<type_id_user, std::string> getCurrentChannels() const override {}
     private:
         GeneratorId generator_;
         std::unordered_map<std::string, type_id_user> nameIdUsers_;

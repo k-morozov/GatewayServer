@@ -5,6 +5,8 @@
 #ifndef GOODOK_SERVERS_CHANNEL_H
 #define GOODOK_SERVERS_CHANNEL_H
 
+#include "IChannel.h"
+
 #include "sdk/database/IDatabase.h"
 #include "sdk/channels/users/IUser.h"
 #include "sdk/channels/users/UserManager.h"
@@ -15,20 +17,16 @@
 
 namespace goodok {
 
-    class Channel;
-    using channelPtr = std::shared_ptr<Channel>;
-
-
-    class Channel {
+    class Channel : public IChannel {
     public:
         Channel(std::shared_ptr<UserManager> manager, std::weak_ptr<db::IDatabase> db, std::string const& name, std::size_t id);
 
-        std::size_t getId() const { return id_; }
-        std::string getName() const { return name_; }
+        std::size_t getId() const override { return id_; }
+        std::string getName() const override { return name_; }
 
-        void addUser(db::type_id_user);
-        void sendHistory(std::size_t id, DateTime const& dt);
-        void write(command::ClientTextMsg const&);
+        void addUser(db::type_id_user) override;
+        void sendHistory(std::size_t id, DateTime const& dt) override;
+        void write(command::ClientTextMsg const&) override;
 
         ~Channel() = default;
     private:
@@ -36,7 +34,7 @@ namespace goodok {
         std::weak_ptr<db::IDatabase> db_;
 
         const std::string name_;
-        const std::size_t id_; // @TODO who generate?
+        const std::size_t id_;
 
         std::unordered_set<db::type_id_user> idUsers_;
     };

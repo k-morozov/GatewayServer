@@ -15,7 +15,8 @@ set_target_properties(${APP_NAME} PROPERTIES
         CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
         LINK_LIBRARIES pthread
-        COMPILE_OPTIONS "-std=c++2a;-O2;-Wall;-Wextra;-Wpedantic"
+        COMPILE_OPTIONS "-std=c++2a;-O2;-Wall;-Wextra;-Wpedantic;-fsanitize=thread"
+        LINK_OPTIONS "-fsanitize=thread"
 )
 
 target_include_directories(${APP_NAME}

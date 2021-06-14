@@ -9,11 +9,12 @@
 
 namespace goodok {
 
-    QueryEngine::QueryEngine(std::shared_ptr<UserManager> manager) :
-        manager_(std::move(manager)),
-        db_(std::make_shared<db::WrapperPg>())
+    QueryEngine::QueryEngine(std::shared_ptr<UserManager> managerUsers, std::shared_ptr<ChannelsManager> managerChannels, std::shared_ptr<db::IDatabase> db) :
+            managerUsers_(std::move(managerUsers)),
+            managerChannels_(std::move(managerChannels)),
+            db_(std::move(db))
     {
-        if (!manager_) {
+        if (!managerUsers_) {
             throw std::invalid_argument("manager pointer is nullptr");
         }
         if (!db_) {
@@ -53,7 +54,7 @@ namespace goodok {
                 .id = client_id
             };
             userPtr clientPtr = UserManager::create(userSettings);
-            manager_->push(clientPtr);
+            managerUsers_->push(clientPtr);
 
             log::write(log::Level::info, "QueryEngine",
                        boost::format("registration new user: login=%1%, client_id=%2%") % clientPtr->getName() % clientPtr->getId());
@@ -84,7 +85,7 @@ namespace goodok {
                     .id = client_id
             };
             userPtr clientPtr = UserManager::create(userSettings);
-            manager_->push(clientPtr);
+            managerUsers_->push(clientPtr);
 
             log::write(log::Level::info, "QueryEngine",
                        boost::format("authorisation user. login=%1%, id=%2%") % clientPtr->getName() % clientPtr->getId());
@@ -101,32 +102,25 @@ namespace goodok {
     {
         log::write(log::Level::info, "QueryEngine",
                    boost::format("get history, user=%1%, channel=%2%") % request.client_id() % request.channel_name());
-        auto it_channel = nameChannels_.find(request.channel_name());
 
-        // @TODO проверить есть ли созданный канал, если нет - проверить, должны ли мы создать его?
-        if (it_channel != nameChannels_.end()) {
-            if (it_channel->second) {
-                DateTime since = DateTime(
-                        Time(request.since().seconds(), request.since().minutes(), request.since().hours()),
-                        Date(request.since().day(), request.since().month(), request.since().year())
-                );
-
-                it_channel->second->sendHistory(request.client_id(), since);
-            } else {
-                log::write(log::Level::error, "QueryEngine",
-                           boost::format("ptr to channel=%1% failed") % request.channel_name());
-            }
-        } else {
+        auto channel = managerChannels_->createOrGetChannelByName(request.channel_name());
+        if (!channel) {
             log::write(log::Level::error, "QueryEngine",
-                       boost::format("channel=%1% does not create yet.") % request.channel_name());
+                       boost::format("getHistory: channel=%1% is nullptr in manager.") % request.channel_name());
         }
+        DateTime since = DateTime(
+                Time(request.since().seconds(), request.since().minutes(), request.since().hours()),
+                Date(request.since().day(), request.since().month(), request.since().year())
+        );
+
+        channel->sendHistory(request.client_id(), since);
     }
 
     void QueryEngine::getChannels(Serialize::ChannelsRequest const& request)
     {
         log::write(log::Level::info, "QueryEngine",
                    boost::format("get channels, client_id=%1%") % request.client_id());
-        auto clientPtr = manager_->getUser(request.client_id());
+        auto clientPtr = managerUsers_->getUser(request.client_id());
         if (!clientPtr) {
             log::write(log::Level::error, "QueryEngine::getChannels",
                        boost::format("client is nullptr") % request.client_id());
@@ -135,13 +129,6 @@ namespace goodok {
 
         if (auto session = clientPtr->getSession().lock()) {
             auto channels = db_->getUserNameChannels(request.client_id()); // lazy?
-            // @TODO создать каналы?
-            for(auto const& channel_name : channels) {
-                db::type_id_user channel_id = db_->getChannelId(channel_name);
-                nameChannels_[channel_name] = std::make_shared<Channel>(manager_, db_, channel_name, channel_id);
-                auto channelPtr = nameChannels_[channel_name];
-                channelPtr->addUser(clientPtr->getId());
-            }
             auto buffer = MsgFactory::serialize<command::TypeCommand::ChannelsResponse>(channels);
             session->write(buffer);
         }
@@ -149,23 +136,16 @@ namespace goodok {
 
     void QueryEngine::joinRoom(Serialize::JoinRoomRequest const& request)
     {
-        if (!db_->hasChannel(request.channel_name())) {
-            auto channel_id = db_->createChannel(request.channel_name());
-            nameChannels_[request.channel_name()] = std::make_shared<Channel>(manager_, db_, request.channel_name(), channel_id);
-            log::write(log::Level::info, "QueryEngine",
-                       boost::format("generate new channel: name=%1%, id=%2%.") % request.channel_name() % channel_id);
-        }
-
+        auto channel = managerChannels_->createOrGetChannelByName(request.channel_name());
         std::size_t client_id = request.client_id();
 
-        auto channelPtr = nameChannels_[request.channel_name()];
-        auto clientPtr = manager_->getUser(client_id);
+        auto clientPtr = managerUsers_->getUser(client_id);
         if (!clientPtr) {
             log::write(log::Level::error, "QueryEngine",
                        boost::format("failed joinRoom. do not find client_id=%1% in engine") % request.client_id());
             return;
         }
-        channelPtr->addUser(clientPtr->getId());
+        channel->addUser(clientPtr->getId());
         db_->joinClientChannel(client_id, request.channel_name());
     }
 
@@ -190,17 +170,12 @@ namespace goodok {
                 )
         };
 
-        auto it_channel = nameChannels_.find(request.channel_name());
-        if (it_channel != nameChannels_.end()) {
-            if (it_channel->second) {
-                it_channel->second->write(message);
-            } else {
-                log::write(log::Level::error, "QueryEngine",
-                           boost::format("ptr to channel=%1% failed") % request.channel_name());
-            }
+        auto channel = managerChannels_->createOrGetChannelByName(request.channel_name());
+        if (channel) {
+            channel->write(message);
         } else {
             log::write(log::Level::error, "QueryEngine",
-                       boost::format("channel=%1% does not create yet.") % request.channel_name());
+                       boost::format("ptr to channel=%1% failed") % request.channel_name());
         }
     }
 }

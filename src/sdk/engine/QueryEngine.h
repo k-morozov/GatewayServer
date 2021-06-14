@@ -10,6 +10,7 @@
 #include "sdk/network/session/ISession.h"
 #include "sdk/channels/users/IUser.h"
 #include "sdk/channels/users/UserManager.h"
+#include "sdk/channels/ChannelsManager.h"
 #include "sdk/channels/Channel.h"
 #include "sdk/common/log/Logger.h"
 #include "sdk/database/Storage.h"
@@ -23,11 +24,12 @@ namespace goodok {
     using engineWeakPtr = std::weak_ptr<QueryEngine>;
 
     /** @TODO
-     * notification user(response) only one time + error checkers
+     * избавить от db
+     * с db работают только менеджеры и их элементы
      */
     class QueryEngine {
     public:
-        explicit QueryEngine(std::shared_ptr<UserManager> manager);
+        explicit QueryEngine(std::shared_ptr<UserManager> manager, std::shared_ptr<ChannelsManager> managerChannels, std::shared_ptr<db::IDatabase> db);
         ~QueryEngine() = default;
 
     public:
@@ -38,10 +40,9 @@ namespace goodok {
         void joinRoom(Serialize::JoinRoomRequest const& request);
         void sendText(Serialize::TextRequest const& request);
     private:
-        std::shared_ptr<UserManager> manager_;
+        std::shared_ptr<UserManager> managerUsers_;
+        std::shared_ptr<ChannelsManager> managerChannels_;
         std::shared_ptr<db::IDatabase> db_;
-
-        std::unordered_map<std::string, channelPtr> nameChannels_;
     };
 }
 

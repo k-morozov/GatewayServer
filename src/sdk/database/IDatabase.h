@@ -29,6 +29,7 @@ namespace goodok::db {
         virtual type_id_user checkRegUser(InputSettings const&) = 0;
         virtual type_id_user checkAuthUser(InputSettings const&) = 0;
         virtual std::deque<std::string> getUserNameChannels(type_id_user const&) = 0;
+        virtual std::vector<type_id_user> getChannelUsers(type_id_user const&) const = 0;
         virtual bool hasChannel(std::string const&) const = 0;
         virtual type_id_user createChannel(std::string const&) = 0;
         virtual void joinClientChannel(type_id_user, std::string const&) = 0;
@@ -36,6 +37,8 @@ namespace goodok::db {
         virtual std::deque<command::ClientTextMsg> getHistory(type_id_user) = 0;
 
         virtual type_id_user getChannelId(std::string const &channel_name) const = 0;
+
+        virtual std::unordered_map<type_id_user, std::string> getCurrentChannels() const = 0;
     };
 }
 

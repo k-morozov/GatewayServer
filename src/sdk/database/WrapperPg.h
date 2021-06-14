@@ -24,6 +24,8 @@ namespace goodok::db {
 
         std::deque<std::string> getUserNameChannels(type_id_user const&) override;
 
+        std::vector<type_id_user> getChannelUsers(type_id_user const&) const override;
+
         bool hasChannel(std::string const&) const override;
 
         type_id_user createChannel(std::string const&) override;
@@ -37,9 +39,12 @@ namespace goodok::db {
         void addMsgHistory(type_id_user, command::ClientTextMsg const&) override;
 
         std::deque<command::ClientTextMsg> getHistory(type_id_user) override;
+
+        std::unordered_map<type_id_user, std::string> getCurrentChannels() const override;
     private:
         PGconn *connection;
         bool isConnected = false;
+        mutable std::mutex mutex_;
 
     public:
         type_id_user getChannelId(std::string const &channel_name) const override;
@@ -49,6 +54,8 @@ namespace goodok::db {
         std::string getClientName(type_id_user) const;
         std::string getChannelName(type_id_user) const;
         bool hasChannelClient(type_id_user, type_id_user) const;
+
+        PGresult * execThreadSafe(std::string const& query) const;
     };
 
 }
