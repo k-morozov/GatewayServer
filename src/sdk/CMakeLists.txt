@@ -7,6 +7,7 @@ set(APP_NAME sdk-goodok)
 file(GLOB FILES_SRC
         "common/log/*.cpp"
         "common/*.h"
+        "common/*.cpp"
         "context/*.cpp"
         "network/*.cpp"
         "network/AcceptProcess.h"

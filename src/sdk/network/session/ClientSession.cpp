@@ -16,42 +16,29 @@ namespace goodok {
         SocketWriter::SocketWriter(std::weak_ptr<socket_t> sock) :
             socketWeak_(std::move(sock))
         {
+            auto handler = [this](auto && PH1) { writeImpl_(std::forward<decltype(PH1)>(PH1)); };
+            queue_ = std::make_unique<ThreadSafeQueue>(handler);
+            queue_->start();
             log::write(log::Level::trace, "SocketWriter", "ctor done");
         }
 
-        void SocketWriter::write(std::vector<uint8_t> const& data/*message*/)
+        void SocketWriter::write(std::vector<uint8_t> const& message)
         {
-            processWrite = !bufferWrite_.empty();
-//            detail::buffer_t data = MsgFactory::serialize<command::TypeCommand::AuthorisationResponse>(1);
-
-            // @TODO data race!!!
-            mutex_.lock();
-            bufferWrite_.push_back(std::move(data));
-            mutex_.unlock();
-            if (!processWrite) {
-                writeImpl_();
+            if (queue_) {
+                queue_->push(message);
             }
         }
 
-        void SocketWriter::writeImpl_() {
+        void SocketWriter::writeImpl_(std::vector<uint8_t> message) {
             if (auto socket = socketWeak_.lock()) {
-                auto callback = [selfWeak = weak_from_this()](boost::system::error_code, std::size_t)
-                {
-                    log::write(log::Level::info, "writeImpl_", "send response");
-                    if (auto self = selfWeak.lock()) {
-                        self->mutex_.lock();
-                        self->bufferWrite_.pop_front();
-                        self->mutex_.unlock();
-                        if (!self->bufferWrite_.empty()) {
-                            self->writeImpl_();
-                        }
-                    }
-                };
                 if (socket) {
                     boost::asio::async_write(
                             *socket,
-                            boost::asio::buffer(bufferWrite_.front()),
-                            std::move(callback));
+                            boost::asio::buffer(message),
+                            [](boost::system::error_code, std::size_t){
+                                // @TODO error check
+                                log::write(log::Level::info, "SocketWriter", "send response: OK");
+                            });
                 } else {
                     log::write(log::Level::error, "SocketWriter", "async_write socket is close");
                 }
