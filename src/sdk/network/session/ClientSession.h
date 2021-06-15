@@ -5,18 +5,18 @@
 #ifndef GOODOK_FRONT_SERVER_SESSION_H
 #define GOODOK_FRONT_SERVER_SESSION_H
 
+#include "ISession.h"
+
 #include "log/Logger.h"
 #include "sdk/context/AsyncContext.h"
+#include "sdk/common/ThreadSafeQueue.h"
 #include "sdk/engine/QueryEngine.h"
-#include "ISession.h"
 
 #include <boost/asio.hpp>
 #include <boost/asio/coroutine.hpp>
 
 #include <memory>
 #include <execution>
-
-#define REMOVE_CONVERT_BODY
 
 namespace goodok {
 
@@ -67,12 +67,10 @@ namespace goodok {
             void write(std::vector<uint8_t> const&);
         private:
             std::weak_ptr<socket_t> socketWeak_;
-            std::list<buffer_t> bufferWrite_;
-            std::atomic<bool> processWrite = false;
+            std::unique_ptr<ThreadSafeQueue> queue_;
 
         private:
-            void writeImpl_();
-            mutable std::mutex mutex_;
+            void writeImpl_(std::vector<uint8_t> message);
         };
     }
 
