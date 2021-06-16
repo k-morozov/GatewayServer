@@ -30,7 +30,7 @@ namespace goodok {
         ~AcceptProcess();
 
     protected:
-        explicit AcceptProcess(AsyncContextWeakPtr ctx, engineWeakPtr engine, int port = 7777);
+        explicit AcceptProcess(AsyncContextWeakPtr ctx, engineWeakPtr engine, int port, std::shared_ptr<ThreadSafeQueue> queue);
 
     public:
         void run();
@@ -39,6 +39,7 @@ namespace goodok {
         AsyncContextWeakPtr ctx_;
         engineWeakPtr engine_;
         int port_;
+        std::shared_ptr<ThreadSafeQueue> queue_;
 
         io_context networkContext_;
         boost::asio::coroutine coroAccept_;
@@ -58,13 +59,14 @@ namespace goodok {
 
 
     template <ConceptSessionType T>
-    AcceptProcess<T>::AcceptProcess(AsyncContextWeakPtr ctxWeak, engineWeakPtr engine, int port) :
+    AcceptProcess<T>::AcceptProcess(AsyncContextWeakPtr ctxWeak, engineWeakPtr engine, int port, std::shared_ptr<ThreadSafeQueue> queue) :
             ctx_(std::move(ctxWeak)),
             engine_(std::move(engine)),
             port_(port),
             endpoint_(tcp::v4(), port_),
             acceptor_(networkContext_, endpoint_),
-            socket_(networkContext_)
+            socket_(networkContext_),
+            queue_(std::move(queue))
     {
         runAccept();
         log::write(log::Level::debug, "Network", "ctor done");
@@ -103,7 +105,7 @@ namespace goodok {
             yield acceptor_.async_accept(socket_,
                                          std::bind(&AcceptProcess::doAccept, this, std::placeholders::_1));
             log::write(log::Level::debug, "Network", "new connection");
-            auto session = std::make_shared<MakeSharedHelper<T>>(ctx_, engine_, std::move(socket_));
+            auto session = std::make_shared<MakeSharedHelper<T>>(ctx_, engine_, std::move(socket_), queue_);
             sessions_.emplace_back(session);
             sessions_.back()->startRead();
             socket_.close();

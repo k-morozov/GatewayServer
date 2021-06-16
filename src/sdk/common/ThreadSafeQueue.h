@@ -20,7 +20,7 @@ namespace goodok {
     class ThreadSafeQueue {
         using buffer_t = std::vector<uint8_t>;
     public:
-        explicit ThreadSafeQueue(std::function<void(buffer_t)> handler);
+        ThreadSafeQueue();
 
         void start(std::size_t threadCount = 2);
 
@@ -34,9 +34,6 @@ namespace goodok {
 
     private:
         std::queue<std::function<void()>> queueTasks_;
-
-        [[deprecated]] std::queue<buffer_t> tasks_;
-        [[deprecated]] std::function<void(buffer_t)> handlerTasks_;
 
         std::mutex cv_mutex_;
         std::condition_variable cv_;

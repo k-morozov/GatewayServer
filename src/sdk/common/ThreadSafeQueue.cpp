@@ -6,8 +6,7 @@
 
 namespace goodok {
 
-ThreadSafeQueue::ThreadSafeQueue(std::function<void(buffer_t)> handler) :
-    handlerTasks_(std::move(handler))
+ThreadSafeQueue::ThreadSafeQueue()
 {
 
 }
@@ -31,14 +30,6 @@ void ThreadSafeQueue::start(std::size_t threadCount)
         threads_.emplace_back(&ThreadSafeQueue::worker, this);
     }
     quit_ = false;
-}
-
-void ThreadSafeQueue::push(buffer_t message)
-{
-    std::lock_guard<std::mutex> g(cv_mutex_);
-    tasks_.push(std::move(message));
-    log::write(log::Level::info, "ThreadSafeQueue", "push task");
-    notify();
 }
 
 void ThreadSafeQueue::push(std::function<void()> && task)

@@ -13,12 +13,12 @@
 namespace goodok {
     namespace detail {
 
-        SocketWriter::SocketWriter(std::weak_ptr<socket_t> sock) :
-            socketWeak_(std::move(sock))
+        SocketWriter::SocketWriter(std::weak_ptr<ThreadSafeQueue> queue, std::weak_ptr<socket_t> sock) :
+            socketWeak_(std::move(sock)),
+            queue_(std::move(queue))
         {
-            auto handler = [this](auto && PH1) { writeImpl_(std::forward<decltype(PH1)>(PH1)); };
-            queue_ = std::make_unique<ThreadSafeQueue>(handler);
-            queue_->start();
+//            queue_ = std::make_unique<ThreadSafeQueue>();
+//            queue_->start();
             log::write(log::Level::trace, "SocketWriter", "ctor done");
         }
 
@@ -33,8 +33,8 @@ namespace goodok {
                 }
             };
 
-            if (queue_) {
-                queue_->push(std::move(task));
+            if (auto queue = queue_.lock()) {
+                queue->push(std::move(task));
             }
         }
 
@@ -59,11 +59,12 @@ namespace goodok {
 
     }
 
-    ClientSession::ClientSession(AsyncContextWeakPtr ctxWeak, engineWeakPtr engine, socket_t && socket) :
+    ClientSession::ClientSession(AsyncContextWeakPtr ctxWeak, engineWeakPtr engine, socket_t && socket, std::shared_ptr<ThreadSafeQueue> queue) :
         ctx_(std::move(ctxWeak)),
         engine_(std::move(engine)),
         socket_(std::make_shared<socket_t>(std::move(socket))),
-        writer_(std::make_shared<detail::SocketWriter>(detail::weak_from(socket_)))
+        writer_(std::make_shared<detail::SocketWriter>(queue_, detail::weak_from(socket_))),
+        queue_(queue)
     {
         if (!socket_){
             throw std::invalid_argument("incorrect socket");
