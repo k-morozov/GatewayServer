@@ -41,19 +41,34 @@ void ThreadSafeQueue::push(buffer_t message)
     notify();
 }
 
+void ThreadSafeQueue::push(std::function<void()> && task)
+{
+    std::lock_guard<std::mutex> g(cv_mutex_);
+    queueTasks_.push(std::move(task));
+    log::write(log::Level::info, "ThreadSafeQueue", "push task");
+    notify();
+}
+
 void ThreadSafeQueue::worker()
 {
     while(!quit_) {
         std::unique_lock<std::mutex> lock(cv_mutex_);
         cv_.wait(lock, [this]() {
-            return !tasks_.empty() || quit_;
+            return !queueTasks_.empty() || quit_;
         });
-        if (!tasks_.empty()) {
-            auto message = tasks_.front();
-            tasks_.pop();
+        if (!queueTasks_.empty()) {
+            auto task = std::move(queueTasks_.front());
+            queueTasks_.pop();
             lock.unlock();
-            handlerTasks_(message);
-            log::write(log::Level::info, "ThreadSafeQueue", "handle task");
+
+            try {
+                task();
+                log::write(log::Level::info, "ThreadSafeQueue", "successfully complete task");
+            } catch (std::exception& ex) {
+                log::write(log::Level::info, "ThreadSafeQueue", boost::format("failed complete task. exception = %1%") % ex.what());
+            }
+
+
         }
     }
 

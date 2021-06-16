@@ -24,8 +24,17 @@ namespace goodok {
 
         void SocketWriter::write(std::vector<uint8_t> const& message)
         {
+           auto task = [selfWeak = weak_from_this(), message]()
+            {
+                if (auto self = selfWeak.lock()) {
+                    self->writeImpl_(message);
+                } else {
+                    log::write(log::Level::warning, "SocketWriter", "is dead");
+                }
+            };
+
             if (queue_) {
-                queue_->push(message);
+                queue_->push(std::move(task));
             }
         }
 

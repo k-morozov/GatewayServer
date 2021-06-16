@@ -9,6 +9,7 @@
 
 #include <condition_variable>
 #include <functional>
+#include <future>
 #include <thread>
 #include <queue>
 
@@ -23,15 +24,20 @@ namespace goodok {
 
         void start(std::size_t threadCount = 2);
 
-        void push(buffer_t message);
+        [[deprecated]] void push(buffer_t message);
+
+        void push(std::function<void()> && task);
 
         void notify();
 
         ~ThreadSafeQueue();
 
     private:
-        std::queue<buffer_t> tasks_;
-        std::function<void(buffer_t)> handlerTasks_;
+        std::queue<std::function<void()>> queueTasks_;
+
+        [[deprecated]] std::queue<buffer_t> tasks_;
+        [[deprecated]] std::function<void(buffer_t)> handlerTasks_;
+
         std::mutex cv_mutex_;
         std::condition_variable cv_;
         std::atomic<bool> quit_;
