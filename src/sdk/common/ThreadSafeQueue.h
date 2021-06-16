@@ -20,11 +20,9 @@ namespace goodok {
     class ThreadSafeQueue {
         using buffer_t = std::vector<uint8_t>;
     public:
-        ThreadSafeQueue();
+        ThreadSafeQueue() = default;
 
         void start(std::size_t threadCount = 2);
-
-        [[deprecated]] void push(buffer_t message);
 
         void push(std::function<void()> && task);
 

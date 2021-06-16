@@ -63,10 +63,10 @@ namespace goodok {
             ctx_(std::move(ctxWeak)),
             engine_(std::move(engine)),
             port_(port),
+            queue_(std::move(queue)),
             endpoint_(tcp::v4(), port_),
             acceptor_(networkContext_, endpoint_),
-            socket_(networkContext_),
-            queue_(std::move(queue))
+            socket_(networkContext_)
     {
         runAccept();
         log::write(log::Level::debug, "Network", "ctor done");

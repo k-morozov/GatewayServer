@@ -6,11 +6,6 @@
 
 namespace goodok {
 
-ThreadSafeQueue::ThreadSafeQueue()
-{
-
-}
-
 ThreadSafeQueue::~ThreadSafeQueue()
 {
     quit_ = true;
@@ -21,8 +16,6 @@ ThreadSafeQueue::~ThreadSafeQueue()
         }
     }
 }
-
-
 
 void ThreadSafeQueue::start(std::size_t threadCount)
 {

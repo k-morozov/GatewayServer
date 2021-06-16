@@ -33,6 +33,7 @@ namespace goodok {
             return src;
         }
 
+        [[deprecated]]
         inline buffer_t convert(std::string const& message) {
             buffer_t data(message.size());
             std::copy(std::execution::par,
@@ -41,6 +42,7 @@ namespace goodok {
             return data;
         }
 
+        [[deprecated]]
         inline std::string convert(buffer_header_t const& message) {
             std::string data;
             std::copy(std::execution::par,
@@ -49,6 +51,7 @@ namespace goodok {
             return data;
         }
 
+        [[deprecated]]
         inline std::string convert(buffer_body_t const& message) {
             std::string data;
             std::copy(std::execution::par,
@@ -88,14 +91,13 @@ namespace goodok {
         void write(std::vector<uint8_t> const&) override;
 
     protected:
-        ClientSession(AsyncContextWeakPtr ctxWeak, engineWeakPtr engine, socket_t &&socket, std::shared_ptr<ThreadSafeQueue> queue);
+        ClientSession(AsyncContextWeakPtr ctxWeak, engineWeakPtr engine, socket_t &&socket, std::shared_ptr<ThreadSafeQueue> const& queue);
 
     private:
         AsyncContextWeakPtr ctx_;
         engineWeakPtr engine_;
         std::shared_ptr<socket_t> socket_;
         std::weak_ptr<ThreadSafeQueue> queue_;
-
         std::shared_ptr<detail::SocketWriter> writer_;
 
         struct CoroData {
