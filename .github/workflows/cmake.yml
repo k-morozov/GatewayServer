@@ -35,7 +35,7 @@ jobs:
       - name: conan-install
         run: |
           mkdir -p ${{github.workspace}}/${{env.BUILD_TYPE_DEBUG}} && mkdir -p ${{github.workspace}}/${{env.BUILD_TYPE_DEBUG}}/proto
-          conan install -s build_type=${{env.BUILD_TYPE_DEBUG}} . --profile goodok-profile -if ${{github.workspace}}/${{env.BUILD_TYPE_DEBUG}}
+          conan install -s build_type=${{env.BUILD_TYPE_DEBUG}} . --build=missing --profile goodok-profile -if ${{github.workspace}}/${{env.BUILD_TYPE_DEBUG}}
 
       - name: Configure CMake
         run: cmake -B ${{github.workspace}}/${{env.DIR_BUILD_DEBUG}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE_DEBUG}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-10
