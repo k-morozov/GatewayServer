@@ -5,7 +5,6 @@
 #include "QueryEngine.h"
 
 #include "sdk/channels/users/User.h"
-#include "sdk/database/WrapperPg.h"
 
 namespace goodok {
 
@@ -65,7 +64,7 @@ namespace goodok {
 
         if (auto session = sessionWeak.lock()) {
             auto buffer = MsgFactory::serialize<command::TypeCommand::RegistrationResponse>(client_id);
-            session->write(buffer);
+            session->write(std::move(buffer));
         }
     }
 
@@ -93,7 +92,7 @@ namespace goodok {
 
         if (auto session = sessionWeak.lock()) {
             auto buffer = MsgFactory::serialize<command::TypeCommand::AuthorisationResponse>(client_id);
-            session->write(buffer);
+            session->write(std::move(buffer));
         }
 
     }
@@ -130,7 +129,7 @@ namespace goodok {
         if (auto session = clientPtr->getSession().lock()) {
             auto channels = db_->getUserNameChannels(request.client_id()); // lazy?
             auto buffer = MsgFactory::serialize<command::TypeCommand::ChannelsResponse>(channels);
-            session->write(buffer);
+            session->write(std::move(buffer));
         }
     }
 
@@ -172,12 +171,10 @@ namespace goodok {
 
         auto channel = managerChannels_->createOrGetChannelByName(request.channel_name());
         if (channel) {
-            channel->write(message);
+            channel->write(std::move(message));
         } else {
             log::write(log::Level::error, "QueryEngine",
                        boost::format("ptr to channel=%1% failed") % request.channel_name());
         }
     }
 }
-
-#include "QueryEngine.h"

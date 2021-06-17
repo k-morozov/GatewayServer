@@ -19,7 +19,7 @@ namespace goodok {
         virtual std::string getName() const = 0;
         virtual void addUser(db::type_id_user) = 0;
         virtual void sendHistory(std::size_t id, DateTime const& dt) = 0;
-        virtual void write(command::ClientTextMsg const&)  = 0;
+        virtual void write(command::ClientTextMsg &&)  = 0;
         virtual ~IChannel() = default;
     };
 }

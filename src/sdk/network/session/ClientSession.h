@@ -33,6 +33,7 @@ namespace goodok {
             return src;
         }
 
+        [[deprecated]]
         inline buffer_t convert(std::string const& message) {
             buffer_t data(message.size());
             std::copy(std::execution::par,
@@ -41,6 +42,7 @@ namespace goodok {
             return data;
         }
 
+        [[deprecated]]
         inline std::string convert(buffer_header_t const& message) {
             std::string data;
             std::copy(std::execution::par,
@@ -49,6 +51,7 @@ namespace goodok {
             return data;
         }
 
+        [[deprecated]]
         inline std::string convert(buffer_body_t const& message) {
             std::string data;
             std::copy(std::execution::par,
@@ -61,16 +64,17 @@ namespace goodok {
         {
             using socket_t = boost::asio::ip::tcp::socket;
         public:
-            explicit SocketWriter(std::weak_ptr<socket_t> sock);
+            explicit SocketWriter(std::weak_ptr<ThreadSafeQueue> queue, std::weak_ptr<socket_t> sock);
             ~SocketWriter() = default;
 
-            void write(std::vector<uint8_t> const&);
+            void write(std::vector<uint8_t> &&);
         private:
             std::weak_ptr<socket_t> socketWeak_;
-            std::unique_ptr<ThreadSafeQueue> queue_;
+            mutable std::mutex mutexSocket_;
+            std::weak_ptr<ThreadSafeQueue> queue_;
 
         private:
-            void writeImpl_(std::vector<uint8_t> message);
+            void writeImpl_(std::vector<uint8_t> && message);
         };
     }
 
@@ -84,15 +88,16 @@ namespace goodok {
         ~ClientSession() override;
 
         void startRead() override;
-        void write(std::vector<uint8_t> const&) override;
+        void write(std::vector<uint8_t> &&) override;
 
     protected:
-        ClientSession(AsyncContextWeakPtr ctxWeak, engineWeakPtr engine, socket_t &&socket);
+        ClientSession(AsyncContextWeakPtr ctxWeak, engineWeakPtr engine, socket_t &&socket, std::shared_ptr<ThreadSafeQueue> const& queue);
 
     private:
         AsyncContextWeakPtr ctx_;
         engineWeakPtr engine_;
         std::shared_ptr<socket_t> socket_;
+        std::weak_ptr<ThreadSafeQueue> queue_;
         std::shared_ptr<detail::SocketWriter> writer_;
 
         struct CoroData {
