@@ -29,7 +29,7 @@ jobs:
         uses: actions/cache@v2.1.5
         with:
           path: ~/.conan
-          key: ${{ runner.os }}-cmake-${{ hashFiles('**/conanfile.txt') }}
+          key: ${{ runner.os }}-cmake-debug-${{ hashFiles('**/conanfile.txt') }}
           restore-keys: ${{ runner.os }}-cmake
 
       - name: conan-install
