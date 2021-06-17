@@ -7,9 +7,42 @@ on:
     branches: [ master ]
 
 env:
-  BUILD_TYPE: Release
+  DIR_BUILD_DEBUG: build-debug
+  BUILD_TYPE_DEBUG: Debug
+  BUILD_TYPE_RELEASE: Release
 
 jobs:
+  build_debug:
+    runs-on: ubuntu-latest
+    container:
+      image: kstmorozov/gateway_server:latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: conan-profile
+        run: |
+          conan profile new goodok-profile --detect --force
+          conan profile update settings.compiler.version=10 goodok-profile
+          conan profile update settings.compiler.libcxx=libstdc++11 goodok-profile
+      - name: Cache
+        uses: actions/cache@v2.1.5
+        with:
+          path: ~/.conan
+          key: ${{ runner.os }}-cmake-${{ hashFiles('**/conanfile.txt') }}
+          restore-keys: ${{ runner.os }}-cmake
+
+      - name: conan-install
+        run: |
+          mkdir -p ${{github.workspace}}/${{env.BUILD_TYPE_DEBUG}} && mkdir -p ${{github.workspace}}/${{env.BUILD_TYPE_DEBUG}}/proto
+          conan install -s build_type=${{env.BUILD_TYPE_DEBUG}} . --profile goodok-profile -if ${{github.workspace}}/${{env.BUILD_TYPE_DEBUG}}
+
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/${{env.DIR_BUILD_DEBUG}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE_DEBUG}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-10
+
+      - name: Build
+        run: |
+          cmake --build ${{github.workspace}}/${{env.DIR_BUILD_DEBUG}} --config ${{env.BUILD_TYPE_DEBUG}}
   build_release:
     runs-on: ubuntu-latest
     container:
@@ -33,18 +66,18 @@ jobs:
       - name: conan-install
         run: |
           mkdir -p ${{github.workspace}}/build && mkdir -p ${{github.workspace}}/build/proto
-          conan install -s build_type=${{env.BUILD_TYPE}} . --build=missing --profile goodok-profile -if ${{github.workspace}}/build
+          conan install -s build_type=${{env.BUILD_TYPE_RELEASE}} . --build=missing --profile goodok-profile -if ${{github.workspace}}/build
 
       - name: Configure CMake
-        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-10
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE_RELEASE}} -DCMAKE_CXX_COMPILER=/usr/bin/g++-10
 
       - name: Build
         run:  |
-          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+          cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE_RELEASE}}
 
 #      - name: Test
 #        run: |
-#          ctest -C ${{env.BUILD_TYPE}}
+#          ctest -C ${{env.BUILD_TYPE_RELEASE}}
 #          # cmake --build ${{github.workspace}}/build --target test
 #
 #      - name: Package
