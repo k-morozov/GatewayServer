@@ -239,12 +239,9 @@ namespace goodok::db {
         const std::string query = "SELECT channel_name FROM channels WHERE channel_name='" + channelName + "';";
         PGresult *res = execThreadSafe(query);
         if (PQresultStatus(res) == PGRES_TUPLES_OK) {
-            std::cerr << "Test: 1" << std::endl;
-            std::cerr << PQgetvalue(res, 0, 0) << std::endl;
             result = PQntuples(res) > 0;
         } else {
             log::write(log::Level::error, "WrapperPg", boost::format("hasChannel: query=%1%. %2%") % query % PQresultErrorMessage(res));
-            std::cerr << "Test: 2" << std::endl;
             throw std::invalid_argument("wrong hasChannel");
         }
         PQclear(res);
@@ -330,7 +327,7 @@ namespace goodok::db {
         PQclear(res);
     }
 
-    void WrapperPg::addMsgHistory(type_id_user channel_id, command::ClientTextMsg const& message) {
+    void WrapperPg::addMsgHistory(type_id_user channel_id, command::ClientTextMsg && message) {
         PGresult *res;
         std::stringstream ss;
         ss << std::setfill('0') << std::setw(4) << message.dt.date.year << "-"

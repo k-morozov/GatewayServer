@@ -16,7 +16,7 @@ namespace goodok {
     class ISession {
     public:
         virtual void startRead() = 0;
-        virtual void write(std::vector<uint8_t> const&) = 0;
+        virtual void write(std::vector<uint8_t> &&) = 0;
         virtual ~ISession() = default;
     };
 

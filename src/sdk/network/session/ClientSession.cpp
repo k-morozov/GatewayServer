@@ -20,12 +20,12 @@ namespace goodok {
             log::write(log::Level::trace, "SocketWriter", "ctor done");
         }
 
-        void SocketWriter::write(std::vector<uint8_t> const& message)
+        void SocketWriter::write(std::vector<uint8_t> && message)
         {
-           auto task = [selfWeak = weak_from_this(), message]()
+           auto task = [selfWeak = weak_from_this(), message{std::move(message)}]() mutable
             {
                 if (auto self = selfWeak.lock()) {
-                    self->writeImpl_(message);
+                    self->writeImpl_(std::move(message));
                 } else {
                     log::write(log::Level::warning, "SocketWriter", "is dead");
                 }
@@ -36,25 +36,30 @@ namespace goodok {
             }
         }
 
-        void SocketWriter::writeImpl_(std::vector<uint8_t> message) {
+        void SocketWriter::writeImpl_(std::vector<uint8_t> && message) {
             if (auto socket = socketWeak_.lock()) {
-                if (socket) {
-                    boost::asio::async_write(
-                            *socket,
-                            boost::asio::buffer(message),
-                            [](boost::system::error_code, std::size_t){
-                                // @TODO error check
-                                log::write(log::Level::info, "SocketWriter", "send response: OK");
-                            });
-                } else {
-                    log::write(log::Level::error, "SocketWriter", "async_write socket is close");
-                }
+                std::unique_lock<std::mutex> locker(mutexSocket_);
 
+                auto handler = [locker_ {std::move(locker)} ](boost::system::error_code ec, std::size_t bytes) mutable {
+                    locker_.unlock();
+
+                    if (ec.failed()) {
+                        log::write(log::Level::error, "SocketWriter",
+                                   boost::format("failed send response: %1%") % ec.message());
+                    } else {
+                        log::write(log::Level::info, "SocketWriter",
+                                   boost::format("send response: OK, count bytes = %1%") % bytes);
+                    }
+                };
+
+                boost::asio::async_write(
+                        *socket,
+                        boost::asio::buffer(message),
+                        std::move(handler));
             } else {
                 log::write(log::Level::error, "SocketWriter", "writeImpl_ socket is close");
             }
         }
-
     }
 
     ClientSession::ClientSession(AsyncContextWeakPtr ctxWeak, engineWeakPtr engine, socket_t && socket, std::shared_ptr<ThreadSafeQueue> const& queue) :
@@ -124,9 +129,9 @@ namespace goodok {
         }
     }
 
-    void ClientSession::write(std::vector<uint8_t> const& message)
+    void ClientSession::write(std::vector<uint8_t> && message)
     {
-        writer_->write(message);
+        writer_->write(std::move(message));
     }
 
     void ClientSession::processRequest(Serialize::Header const& header, Serialize::Request const& request)
@@ -147,7 +152,7 @@ namespace goodok {
                 } else {
                     log::write(log::Level::error, "processRequest", "RegistrationRequest: Mismatch command in header and type request in body");
                     auto buffer = MsgFactory::serialize<command::TypeCommand::RegistrationResponse>(0);
-                    write(buffer);
+                    write(std::move(buffer));
                 }
                 break;
             case command::TypeCommand::RegistrationResponse:
@@ -164,7 +169,7 @@ namespace goodok {
                 } else {
                     log::write(log::Level::error, "processRequest", "AuthorisationRequest: Mismatch command in header and type request in body");
                     auto buffer = MsgFactory::serialize<command::TypeCommand::AuthorisationResponse>(0);
-                    write(buffer);
+                    write(std::move(buffer));
                 }
                 break;
             case command::TypeCommand::AuthorisationResponse:
@@ -200,7 +205,7 @@ namespace goodok {
                 } else {
                     log::write(log::Level::error, "processRequest", "JoinRoomRequest: Mismatch command in header and type request in body");
                     auto buffer = MsgFactory::serialize<command::TypeCommand::JoinRoomResponse>("", false);
-                    write(buffer);
+                    write(std::move(buffer));
                 }
                 break;
             case command::TypeCommand::JoinRoomResponse:

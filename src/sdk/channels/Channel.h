@@ -26,7 +26,7 @@ namespace goodok {
 
         void addUser(db::type_id_user) override;
         void sendHistory(std::size_t id, DateTime const& dt) override;
-        void write(command::ClientTextMsg const&) override;
+        void write(command::ClientTextMsg &&) override;
 
         ~Channel() = default;
     private:

@@ -54,7 +54,7 @@ namespace goodok {
 
             if (auto session = user->getSession().lock()) {
                 auto buffer = MsgFactory::serialize<command::TypeCommand::JoinRoomResponse>(name_, true);
-                session->write(buffer);
+                session->write(std::move(buffer));
             }
         }
 
@@ -92,7 +92,7 @@ namespace goodok {
 //            }
             if (!responseHistory.empty()) {
                 auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(name_, responseHistory);
-                session->write(buffer);
+                session->write(std::move(buffer));
             } else {
                 log::write(log::Level::error, boost::format("Channel=%1%") % name_,
                            "have not got a new messages");
@@ -104,7 +104,7 @@ namespace goodok {
     }
 
 
-    void Channel::write(command::ClientTextMsg const& message)
+    void Channel::write(command::ClientTextMsg && message)
     {
         auto buffer = MsgFactory::serialize<command::TypeCommand::EchoResponse>(message);
 
@@ -116,11 +116,11 @@ namespace goodok {
             log::write(log::Level::error, boost::format("Channel=%1%") % name_,
                        boost::format("send msg=%1% to user=%2%") % message.text % user->getName());
             if (auto session = user->getSession().lock()) {
-                session->write(buffer);
+                session->write(std::move(buffer));
             }
         }
         if (auto db = db_.lock()) {
-            db->addMsgHistory(id_, message);
+            db->addMsgHistory(id_, std::move(message));
         }
     }
 

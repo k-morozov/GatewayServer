@@ -67,14 +67,14 @@ namespace goodok {
             explicit SocketWriter(std::weak_ptr<ThreadSafeQueue> queue, std::weak_ptr<socket_t> sock);
             ~SocketWriter() = default;
 
-            void write(std::vector<uint8_t> const&);
+            void write(std::vector<uint8_t> &&);
         private:
             std::weak_ptr<socket_t> socketWeak_;
+            mutable std::mutex mutexSocket_;
             std::weak_ptr<ThreadSafeQueue> queue_;
-//            std::unique_ptr<ThreadSafeQueue> queue_;
 
         private:
-            void writeImpl_(std::vector<uint8_t> message);
+            void writeImpl_(std::vector<uint8_t> && message);
         };
     }
 
@@ -88,7 +88,7 @@ namespace goodok {
         ~ClientSession() override;
 
         void startRead() override;
-        void write(std::vector<uint8_t> const&) override;
+        void write(std::vector<uint8_t> &&) override;
 
     protected:
         ClientSession(AsyncContextWeakPtr ctxWeak, engineWeakPtr engine, socket_t &&socket, std::shared_ptr<ThreadSafeQueue> const& queue);

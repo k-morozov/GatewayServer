@@ -33,7 +33,7 @@ namespace goodok::db {
         virtual bool hasChannel(std::string const&) const = 0;
         virtual type_id_user createChannel(std::string const&) = 0;
         virtual void joinClientChannel(type_id_user, std::string const&) = 0;
-        virtual  void addMsgHistory(type_id_user, command::ClientTextMsg const&) = 0;
+        virtual  void addMsgHistory(type_id_user, command::ClientTextMsg &&) = 0;
         virtual std::deque<command::ClientTextMsg> getHistory(type_id_user) = 0;
 
         virtual type_id_user getChannelId(std::string const &channel_name) const = 0;
