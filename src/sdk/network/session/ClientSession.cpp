@@ -9,6 +9,7 @@
 #include <boost/asio/yield.hpp>
 
 #include <algorithm>
+#include <functional>
 
 namespace goodok {
     namespace detail {
@@ -22,21 +23,12 @@ namespace goodok {
 
         void SocketWriter::write(std::vector<uint8_t> && message)
         {
-           auto task = [selfWeak = weak_from_this(), message{std::move(message)}]() mutable
-            {
-                if (auto self = selfWeak.lock()) {
-                    self->writeImpl_(std::move(message));
-                } else {
-                    log::write(log::Level::warning, "SocketWriter", "is dead");
-                }
-            };
-
             if (auto queue = queue_.lock()) {
-                queue->push(std::move(task));
+                queue->push(&SocketWriter::writeImpl_, this, std::forward<decltype(message)>(message));
             }
         }
 
-        void SocketWriter::writeImpl_(std::vector<uint8_t> && message) {
+        void SocketWriter::writeImpl_(std::vector<uint8_t> const& message) {
             if (auto socket = socketWeak_.lock()) {
                 std::unique_lock<std::mutex> locker(mutexSocket_);
 

@@ -24,7 +24,8 @@ namespace goodok {
 
         void start(std::size_t threadCount = 2);
 
-        void push(std::function<void()> && task);
+        template<class Func, class ... Args, typename = typename std::enable_if<std::is_invocable<Func, Args...>::value>::type>
+        void push(Func && f, Args && ... args);
 
         void notify();
 
@@ -43,6 +44,15 @@ namespace goodok {
         void worker();
     };
 
+    template<class Func, class ... Args, class >
+    void ThreadSafeQueue::push(Func && f, Args && ... args)
+    {
+        std::lock_guard<std::mutex> g(cv_mutex_);
+        queueTasks_.push(std::bind(std::forward<Func>(f), std::forward<Args>(args)...));
+        log::write(log::Level::info, "ThreadSafeQueue", "push task");
+        notify();
+    }
 }
+
 
 #endif //GOODOK_SERVERS_THREADSAFEQUEUE_H

@@ -74,7 +74,7 @@ namespace goodok {
             std::weak_ptr<ThreadSafeQueue> queue_;
 
         private:
-            void writeImpl_(std::vector<uint8_t> && message);
+            void writeImpl_(std::vector<uint8_t> const& message);
         };
     }
 
