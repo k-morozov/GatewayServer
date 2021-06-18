@@ -19,7 +19,7 @@ namespace goodok {
 
     class Channel : public IChannel {
     public:
-        Channel(std::shared_ptr<UserManager> manager, std::weak_ptr<db::IDatabase> db, std::string const& name, std::size_t id);
+        Channel(std::weak_ptr<UserManager> manager, std::weak_ptr<db::IDatabase> db, std::string const& name, std::size_t id);
 
         std::size_t getId() const override { return id_; }
         std::string getName() const override { return name_; }
@@ -28,9 +28,9 @@ namespace goodok {
         void sendHistory(std::size_t id, DateTime const& dt) override;
         void write(command::ClientTextMsg &&) override;
 
-        ~Channel() = default;
+        ~Channel() override = default;
     private:
-        std::shared_ptr<UserManager> manager_;
+        std::weak_ptr<UserManager> manager_;
         std::weak_ptr<db::IDatabase> db_;
 
         const std::string name_;

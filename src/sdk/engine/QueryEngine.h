@@ -23,13 +23,9 @@ namespace goodok {
     using enginePtr = std::shared_ptr<QueryEngine>;
     using engineWeakPtr = std::weak_ptr<QueryEngine>;
 
-    /** @TODO
-     * избавить от db
-     * с db работают только менеджеры и их элементы
-     */
     class QueryEngine {
     public:
-        explicit QueryEngine(std::shared_ptr<UserManager> manager, std::shared_ptr<ChannelsManager> managerChannels, std::shared_ptr<db::IDatabase> db);
+        explicit QueryEngine(std::shared_ptr<UserManager> manager, std::shared_ptr<ChannelsManager> managerChannels);
         ~QueryEngine() = default;
 
     public:
@@ -42,7 +38,6 @@ namespace goodok {
     private:
         std::shared_ptr<UserManager> managerUsers_;
         std::shared_ptr<ChannelsManager> managerChannels_;
-        std::shared_ptr<db::IDatabase> db_;
     };
 }
 

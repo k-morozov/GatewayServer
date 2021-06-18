@@ -8,7 +8,7 @@
 
 namespace goodok {
 
-    Channel::Channel(std::shared_ptr<UserManager> manager, std::weak_ptr<db::IDatabase> db, std::string const& name, std::size_t id) :
+    Channel::Channel(std::weak_ptr<UserManager> manager, std::weak_ptr<db::IDatabase> db, std::string const& name, std::size_t id) :
         manager_(std::move(manager)),
         db_(std::move(db)),
         name_(name),
@@ -40,9 +40,14 @@ namespace goodok {
 
     void Channel::addUser(db::type_id_user client_id)
     {
+        auto manager = manager_.lock();
+        if (!manager) {
+            return;
+        }
+
         if (!idUsers_.contains(client_id)) {
             idUsers_.insert(client_id);
-            auto user = manager_->getUser(client_id);
+            auto user = manager->getUser(client_id);
             if (!user) {
                 log::write(log::Level::error, boost::format("Channel=%1%") % name_,
                            boost::format("add user: not valid user with id=%1%") % client_id);
@@ -62,13 +67,18 @@ namespace goodok {
 
     void Channel::sendHistory(std::size_t client_id, DateTime const& dt)
     {
+        auto manager = manager_.lock();
+        if (!manager) {
+            return;
+        }
+
         if (!idUsers_.contains(client_id)) {
             log::write(log::Level::error, boost::format("Channel=%1%") % name_,
                        boost::format("user_id=%1% not used channel=%2%") % client_id % name_);
             return;
         }
 
-        auto clientPtr = manager_->getUser(client_id);
+        auto clientPtr = manager->getUser(client_id);
         if (!clientPtr) {
             log::write(log::Level::error, boost::format("Channel=%1%") % name_,
                 boost::format("failed ptr to user_id=%1%") % client_id);
@@ -86,10 +96,6 @@ namespace goodok {
             }
             log::write(log::Level::info, boost::format("Channel=%1%") % name_,
                        boost::format("count messages to send user = %1%") % responseHistory.size());
-//            for(const auto& response : responseHistory) {
-//                log::write(log::Level::error, boost::format("Channel=%1%") % name_,
-//                           boost::format("text = %1%") % response.text);
-//            }
             if (!responseHistory.empty()) {
                 auto buffer = MsgFactory::serialize<command::TypeCommand::HistoryResponse>(name_, responseHistory);
                 session->write(std::move(buffer));
@@ -106,10 +112,15 @@ namespace goodok {
 
     void Channel::write(command::ClientTextMsg && message)
     {
+        auto manager = manager_.lock();
+        if (!manager) {
+            return;
+        }
+
         auto buffer = MsgFactory::serialize<command::TypeCommand::EchoResponse>(message);
 
         for(auto const& id : idUsers_) {
-            auto user = manager_->getUser(id);
+            auto user = manager->getUser(id);
             if (!user) {
                 continue;
             }

@@ -32,10 +32,6 @@ namespace goodok::db {
 
         void joinClientChannel(type_id_user, std::string const&) override;
 
-// *********************************************************************************************
-
-
-
         void addMsgHistory(type_id_user, command::ClientTextMsg &&) override;
 
         std::deque<command::ClientTextMsg> getHistory(type_id_user) override;
