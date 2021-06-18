@@ -26,8 +26,6 @@ namespace goodok {
         void joinClientChannel(db::type_id_user, std::string const&) const;
     private:
         std::shared_ptr<UserManager> managerUsers_;
-
-        // @TODO weak_ptr
         std::weak_ptr<db::IDatabase> db_;
 
         std::mutex mutex_;
