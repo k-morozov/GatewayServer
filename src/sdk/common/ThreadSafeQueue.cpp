@@ -43,8 +43,6 @@ void ThreadSafeQueue::worker()
             } catch (std::exception& ex) {
                 log::write(log::Level::info, "ThreadSafeQueue", boost::format("failed complete task. exception = %1%") % ex.what());
             }
-
-
         }
     }
 
@@ -53,7 +51,7 @@ void ThreadSafeQueue::worker()
 
 void ThreadSafeQueue::notify()
 {
-    cv_.notify_all();
+    cv_.notify_one();
 }
 
 }

@@ -16,13 +16,12 @@
 
 namespace goodok {
 
-//    @TODO tamplate?
     class ThreadSafeQueue {
         using buffer_t = std::vector<uint8_t>;
     public:
         ThreadSafeQueue() = default;
 
-        void start(std::size_t threadCount = 2);
+        void start(std::size_t threadCount = 4);
 
         template<class Func, class ... Args, typename = typename std::enable_if<std::is_invocable<Func, Args...>::value>::type>
         void push(Func && f, Args && ... args);
@@ -47,8 +46,11 @@ namespace goodok {
     template<class Func, class ... Args, class >
     void ThreadSafeQueue::push(Func && f, Args && ... args)
     {
+        auto func = [f = std::forward<Func>(f), t = std::make_tuple(std::forward<Args>(args) ...)]() {
+            std::apply(f, t);
+        };
         std::lock_guard<std::mutex> g(cv_mutex_);
-        queueTasks_.push(std::bind(std::forward<Func>(f), std::forward<Args>(args)...));
+        queueTasks_.push(func);
         log::write(log::Level::info, "ThreadSafeQueue", "push task");
         notify();
     }
