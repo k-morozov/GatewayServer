@@ -59,16 +59,5 @@ namespace goodok {
 
         workers_->post(std::forward<Task>(task));
     }
-
-//    template<class Func, class ... Args>
-//    void AsyncContext::runAsync(AsyncContextWeakPtr const& weakCtx, Func && func, Args &&... args)
-//    {
-//        if (auto ctx = weakCtx.lock()) {
-//            ctx->runAsyncImpl(std::bind(
-//                    std::forward<Func>(func),
-//                    std::forward<Args>(args)...))
-//            ;
-//        }
-//    }
 }
 #endif //GOODOK_FRONT_SERVER_ASYNCCONTEXT_H

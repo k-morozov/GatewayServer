@@ -109,7 +109,7 @@ namespace goodok {
             coroData_.request.ParseFromArray(coroData_.bufferBody_.data(),
                                              static_cast<int>(coroData_.header.length()));
 
-            AsyncContext::runAsync(ctx_, &ClientSession::processRequest, this, coroData_.header, coroData_.request);
+            AsyncContext::runAsync(ctx_, &ClientSession::processRequest, this, std::move(coroData_.header), std::move(coroData_.request));
         }
     }
 
@@ -135,7 +135,8 @@ namespace goodok {
                     }
                 } else {
                     log::write(log::Level::error, "processRequest", "RegistrationRequest: Mismatch command in header and type request in body");
-                    auto buffer = MsgFactory::serialize<command::TypeCommand::RegistrationResponse>(0);
+                    constexpr int CODE_FAILED_REG = 0;
+                    auto buffer = MsgFactory::serialize<command::TypeCommand::RegistrationResponse>(CODE_FAILED_REG);
                     write(std::move(buffer));
                 }
                 break;

@@ -7,7 +7,7 @@
 namespace goodok {
 
     AsyncContext::AsyncContext() :
-        workers_(std::make_unique<WorkersPool>(2))
+        workers_(std::make_unique<WorkersPool>(4))
     {
         log::write(log::Level::trace,
                    "AsyncContext",
