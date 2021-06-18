@@ -61,10 +61,19 @@ int main(int argc, char *argv[])
         goodok::log::configure(goodok::log::Level::debug);
 
         std::shared_ptr<goodok::db::IDatabase> db = std::make_shared<goodok::db::WrapperPg>();
-        auto managerUsers = std::make_shared<goodok::UserManager>();
+        goodok::db::ConnectSettings settings;
+        if (db->connect(settings)) {
+            goodok::log::write(goodok::log::Level::info, "main","connect to pgsql successfully");
+        } else {
+            goodok::log::write(goodok::log::Level::error, "main","failed to connect db. close server");
+            return 1;
+        }
+
+        auto managerUsers = std::make_shared<goodok::UserManager>(db);
+        // @TODO need db?
         auto managerChannels = std::make_shared<goodok::ChannelsManager>(managerUsers, db);
 
-        goodok::enginePtr engine = std::make_shared<goodok::QueryEngine>(managerUsers, managerChannels, db);
+        goodok::enginePtr engine = std::make_shared<goodok::QueryEngine>(managerUsers, managerChannels);
 
         auto ctx = std::make_shared<goodok::AsyncContext>();
 

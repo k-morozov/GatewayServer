@@ -15,6 +15,26 @@ namespace goodok {
         return std::make_shared<MakeSharedHelper<User>>(settings);
     }
 
+    db::type_id_user UserManager::checkRegUser(db::InputSettings const& settings) const
+    {
+        db::type_id_user client_id = db::REG_LOGIN_IS_BUSY;
+        if (auto db = db_.lock())
+        {
+            client_id = db->checkRegUser(settings);
+        }
+        return client_id;
+    }
+
+    db::type_id_user UserManager::checkAuthUser(db::InputSettings const& settings) const
+    {
+        db::type_id_user client_id = db::AUTH_LOGIN_IS_NOT_AVAILABLE;
+        if (auto db = db_.lock())
+        {
+            client_id = db->checkAuthUser(settings);
+        }
+        return client_id;
+    }
+
     void UserManager::push(userPtr data) {
         if (!data) {
             log::write(log::Level::error, "UserManager::push", "data is nullptr");
