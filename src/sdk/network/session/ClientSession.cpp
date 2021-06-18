@@ -9,6 +9,7 @@
 #include <boost/asio/yield.hpp>
 
 #include <algorithm>
+#include <functional>
 
 namespace goodok {
     namespace detail {
@@ -22,21 +23,12 @@ namespace goodok {
 
         void SocketWriter::write(std::vector<uint8_t> && message)
         {
-           auto task = [selfWeak = weak_from_this(), message{std::move(message)}]() mutable
-            {
-                if (auto self = selfWeak.lock()) {
-                    self->writeImpl_(std::move(message));
-                } else {
-                    log::write(log::Level::warning, "SocketWriter", "is dead");
-                }
-            };
-
             if (auto queue = queue_.lock()) {
-                queue->push(std::move(task));
+                queue->push(&SocketWriter::writeImpl_, this, std::forward<decltype(message)>(message));
             }
         }
 
-        void SocketWriter::writeImpl_(std::vector<uint8_t> && message) {
+        void SocketWriter::writeImpl_(std::vector<uint8_t> const& message) {
             if (auto socket = socketWeak_.lock()) {
                 std::unique_lock<std::mutex> locker(mutexSocket_);
 
@@ -94,26 +86,18 @@ namespace goodok {
 
     void ClientSession::runRead(boost::system::error_code ec, std::size_t)
     {
-        if (ec) {
-            log::write(log::Level::error,
-                       "ClientSession",
-                       boost::format("read with error: %1%") % ec.message());
-            return;
-        }
-
-        auto callback = [selfWeak = weak_from_this()](boost::system::error_code ec, std::size_t nbytes) mutable {
-            if (auto self = selfWeak.lock()) {
-                self->runRead(ec, nbytes);
-            }
-        };
-
         reenter(coroData_.coro_) for(;;)
         {
             log::write(log::Level::trace, "ClientSession", "read header");
             yield boost::asio::async_read(*socket_,
                                           boost::asio::buffer(coroData_.bufferHeader_.data(), detail::MAX_SIZE_HEADER_BUFFER),
-                                          callback);
-
+                                          std::bind(&ClientSession::runRead, this, std::placeholders::_1, std::placeholders::_2));
+            if (ec.failed()) {
+                log::write(log::Level::error,
+                           "ClientSession",
+                           boost::format("read with error: %1%") % ec.message());
+                continue;
+            }
             log::write(log::Level::trace, "ClientSession", "read body");
 
             coroData_.header.ParseFromArray(coroData_.bufferHeader_.data(), detail::MAX_SIZE_HEADER_BUFFER);
@@ -121,11 +105,11 @@ namespace goodok {
             coroData_.bufferBody_.resize(coroData_.header.length());
             yield boost::asio::async_read(*socket_,
                                           boost::asio::buffer(coroData_.bufferBody_.data(), coroData_.header.length()),
-                                          callback);
+                                          std::bind(&ClientSession::runRead, this, std::placeholders::_1, std::placeholders::_2));
             coroData_.request.ParseFromArray(coroData_.bufferBody_.data(),
                                              static_cast<int>(coroData_.header.length()));
 
-            AsyncContext::runAsync(ctx_, &ClientSession::processRequest, this, coroData_.header, coroData_.request);
+            AsyncContext::runAsync(ctx_, &ClientSession::processRequest, this, std::move(coroData_.header), std::move(coroData_.request));
         }
     }
 
@@ -151,7 +135,8 @@ namespace goodok {
                     }
                 } else {
                     log::write(log::Level::error, "processRequest", "RegistrationRequest: Mismatch command in header and type request in body");
-                    auto buffer = MsgFactory::serialize<command::TypeCommand::RegistrationResponse>(0);
+                    constexpr int CODE_FAILED_REG = 0;
+                    auto buffer = MsgFactory::serialize<command::TypeCommand::RegistrationResponse>(CODE_FAILED_REG);
                     write(std::move(buffer));
                 }
                 break;

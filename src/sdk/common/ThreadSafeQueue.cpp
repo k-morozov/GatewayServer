@@ -25,14 +25,6 @@ void ThreadSafeQueue::start(std::size_t threadCount)
     quit_ = false;
 }
 
-void ThreadSafeQueue::push(std::function<void()> && task)
-{
-    std::lock_guard<std::mutex> g(cv_mutex_);
-    queueTasks_.push(std::move(task));
-    log::write(log::Level::info, "ThreadSafeQueue", "push task");
-    notify();
-}
-
 void ThreadSafeQueue::worker()
 {
     while(!quit_) {
@@ -51,8 +43,6 @@ void ThreadSafeQueue::worker()
             } catch (std::exception& ex) {
                 log::write(log::Level::info, "ThreadSafeQueue", boost::format("failed complete task. exception = %1%") % ex.what());
             }
-
-
         }
     }
 
@@ -61,7 +51,7 @@ void ThreadSafeQueue::worker()
 
 void ThreadSafeQueue::notify()
 {
-    cv_.notify_all();
+    cv_.notify_one();
 }
 
 }

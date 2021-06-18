@@ -33,33 +33,6 @@ namespace goodok {
             return src;
         }
 
-        [[deprecated]]
-        inline buffer_t convert(std::string const& message) {
-            buffer_t data(message.size());
-            std::copy(std::execution::par,
-                      std::begin(message), std::end(message),
-                      std::begin(data));
-            return data;
-        }
-
-        [[deprecated]]
-        inline std::string convert(buffer_header_t const& message) {
-            std::string data;
-            std::copy(std::execution::par,
-                      std::begin(message), std::end(message),
-                      std::back_inserter(data));
-            return data;
-        }
-
-        [[deprecated]]
-        inline std::string convert(buffer_body_t const& message) {
-            std::string data;
-            std::copy(std::execution::par,
-                      std::begin(message), std::end(message),
-                      std::back_inserter(data));
-            return data;
-        }
-
         class SocketWriter : public std::enable_shared_from_this<SocketWriter>
         {
             using socket_t = boost::asio::ip::tcp::socket;
@@ -74,7 +47,7 @@ namespace goodok {
             std::weak_ptr<ThreadSafeQueue> queue_;
 
         private:
-            void writeImpl_(std::vector<uint8_t> && message);
+            void writeImpl_(std::vector<uint8_t> const& message);
         };
     }
 

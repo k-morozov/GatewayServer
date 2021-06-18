@@ -25,7 +25,7 @@ namespace goodok {
 
     class WorkersPool {
     public:
-        WorkersPool(std::size_t countThread = 1);
+        explicit WorkersPool(std::size_t countThread = 2);
         ~WorkersPool();
 
         template<class Task>
