@@ -9,7 +9,7 @@
 
 namespace goodok {
 
-ChannelsManager::ChannelsManager(std::shared_ptr<UserManager> manager, std::weak_ptr<db::IDatabase> db) :
+ChannelsManager::ChannelsManager(std::weak_ptr<UserManager> manager, std::weak_ptr<db::IDatabase> db) :
     managerUsers_(std::move(manager)),
     db_(std::move(db))
 {

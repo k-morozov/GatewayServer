@@ -327,7 +327,7 @@ namespace goodok::db {
         PQclear(res);
     }
 
-    void WrapperPg::addMsgHistory(type_id_user channel_id, command::ClientTextMsg && message) {
+    void WrapperPg::addMsgHistory(type_id_user /*channel_id*/, command::ClientTextMsg && message) {
         PGresult *res;
         std::stringstream ss;
         ss << std::setfill('0') << std::setw(4) << message.dt.date.year << "-"
