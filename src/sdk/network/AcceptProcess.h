@@ -55,9 +55,6 @@ namespace goodok {
         void doAccept(boost::system::error_code = {});
     };
 
-    // realisation
-
-
     template <ConceptSessionType T>
     AcceptProcess<T>::AcceptProcess(AsyncContextWeakPtr ctxWeak, engineWeakPtr engine, int port, std::shared_ptr<ThreadSafeQueue> queue) :
             ctx_(std::move(ctxWeak)),
@@ -69,7 +66,7 @@ namespace goodok {
             socket_(networkContext_)
     {
         runAccept();
-        log::write(log::Level::debug, "Network", "ctor done");
+        log::write(log::Level::debug, "AcceptProcess", "ctor done");
     }
 
     template <ConceptSessionType T>
@@ -80,7 +77,7 @@ namespace goodok {
         {
             socket_.close();
         }
-        log::write(log::Level::debug, "Network", "dtor done");
+        log::write(log::Level::debug, "AcceptProcess", "dtor done");
     }
 
     template <ConceptSessionType T>
@@ -96,18 +93,20 @@ namespace goodok {
     }
 
     template <ConceptSessionType T>
-    void AcceptProcess<T>::doAccept(boost::system::error_code)
+    void AcceptProcess<T>::doAccept(boost::system::error_code ec)
     {
-        // @TODO error code checker?
         reenter(coroAccept_) for(;;)
         {
-            log::write(log::Level::trace, "Network", "wait accept...");
+            log::write(log::Level::trace, "AcceptProcess", "wait accept...");
             yield acceptor_.async_accept(socket_,
                                          std::bind(&AcceptProcess::doAccept, this, std::placeholders::_1));
-            log::write(log::Level::debug, "Network", "new connection");
-            auto session = std::make_shared<MakeSharedHelper<T>>(ctx_, engine_, std::move(socket_), queue_);
-            sessions_.emplace_back(session);
-            sessions_.back()->startRead();
+            log::write(log::Level::debug, "AcceptProcess", boost::format("new connection, ec = %1%") % ec.message());
+            if (!ec.failed())
+            {
+                auto session = std::make_shared<MakeSharedHelper<T>>(ctx_, engine_, std::move(socket_), queue_);
+                sessions_.emplace_back(session);
+                sessions_.back()->startRead();
+            }
             socket_.close();
         }
     }
