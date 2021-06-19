@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(goodok-servers)
-if (DEFINED $ENV{TRAVIS_BUILD_NUMBER})
+if (DEFINED ENV{TRAVIS_BUILD_NUMBER})
+    message("set travis version")
     project(goodok-servers VERSION 0.1.$ENV{TRAVIS_BUILD_NUMBER})
 else ()
+    message("set default version")
     project(goodok-servers VERSION 0.1.1)
 endif ()
 
