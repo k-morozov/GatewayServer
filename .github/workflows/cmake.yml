@@ -75,11 +75,9 @@ jobs:
       - name: Build
         run:  |
           cmake --build ${{github.workspace}}/${{env.DIR_BUILD_RELEASE}} --config ${{env.BUILD_TYPE_RELEASE}}
+          cmake --build ${{github.workspace}}/${{env.DIR_BUILD_RELEASE}} --target package
 
 #      - name: Test
 #        run: |
 #          ctest -C ${{env.BUILD_TYPE_RELEASE}}
 #          # cmake --build ${{github.workspace}}/build --target test
-#
-#      - name: Package
-#        run: cmake --build ${{github.workspace}}/build --target package
