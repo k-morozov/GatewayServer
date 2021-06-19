@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(goodok-servers)
+if (DEFINED ENV{TRAVIS_BUILD_NUMBER})
+    project(goodok-servers VERSION 0.1.$ENV{TRAVIS_BUILD_NUMBER})
+else ()
+    project(goodok-servers VERSION 0.1.1)
+endif ()
 
 set(APP_NAME goodok-servers)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
