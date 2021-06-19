@@ -70,13 +70,10 @@ int main(int argc, char *argv[])
         }
 
         auto managerUsers = std::make_shared<goodok::UserManager>(db);
-        // @TODO need db?
         auto managerChannels = std::make_shared<goodok::ChannelsManager>(managerUsers, db);
-
         goodok::enginePtr engine = std::make_shared<goodok::QueryEngine>(managerUsers, managerChannels);
 
         auto ctx = std::make_shared<goodok::AsyncContext>();
-
         auto queue = std::make_shared<goodok::ThreadSafeQueue>();
 
         using AcceptType = goodok::AcceptProcess<goodok::ClientSession>;
